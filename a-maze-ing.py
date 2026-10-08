@@ -8,9 +8,10 @@ class Cell:
         self.east = 1
         self.south = 1
         self.west = 1
-        
+
+
 def create_visited_maze(width: int, height: int) -> object:
- 
+
     visited_maze = np.empty((height, width), dtype=object)
 
     for column in range(width):
@@ -18,8 +19,9 @@ def create_visited_maze(width: int, height: int) -> object:
             visited_maze[row, column] = False
     return visited_maze
 
-def create_maze(width, height) -> object:
- 
+
+def create_maze(width: int, height: int) -> object:
+
     maze = np.empty((height, width), dtype=object)
 
     for column in range(width):
@@ -27,6 +29,46 @@ def create_maze(width, height) -> object:
             maze[row, column] = Cell()
 #    print(maze[0, 0].north)
     return maze
+
+
+def define_direction(pos_init: tuple, pos_next: tuple) -> str:
+
+    y = pos_init[0]
+    x = pos_init[1]
+    next_y = pos_next[0]
+    next_x = pos_next[1]
+
+    if y - next_y == -1:
+        direction = "south"
+    elif y - next_y == 1:
+        direction = "north"
+    elif x - next_x == -1:
+        direction = "west"
+    elif x - next_x == 1:
+        direction = "east"
+
+    return (direction)
+
+
+def short_direction(pos_init: tuple, pos_next: tuple) -> str:
+
+    y = pos_init[0]
+    x = pos_init[1]
+    next_y = pos_next[0]
+    next_x = pos_next[1]
+
+    direction = ""
+
+    if y - next_y == -1:
+        direction = "S"
+    elif y - next_y == 1:
+        direction = "N"
+    elif x - next_x == -1:
+        direction = "W"
+    elif x - next_x == 1:
+        direction = "E"
+
+    return (direction)
 
 
 def calculate_hex(cell: Cell) -> str:
@@ -39,7 +81,7 @@ def calculate_hex(cell: Cell) -> str:
 
 
 def create_hex_maze(maze: object, width: int, height: int) -> object:
- 
+
     hex_maze = np.empty((height, width), dtype=object)
 
     for x in range(width):
@@ -50,17 +92,21 @@ def create_hex_maze(maze: object, width: int, height: int) -> object:
 
 
 def create_bit_maze(maze: object, width: int, height: int) -> object:
- 
+
     bit_maze = np.empty((height, width), dtype=int)
 
     for x in range(width):
         for y in range(height):
-            bit_maze[y, x] = maze[y, x].north * 1000 + maze[y, x].east * 100 + maze[y, x].south * 10 + maze[y, x].west * 1
-#    print(maze[0, 0].north)
+            bit_maze[y, x] = (maze[y, x].north * 1
+                              + maze[y, x].east * 10
+                              + maze[y, x].south * 100
+                              + maze[y, x].west * 1000
+                              )
+
     return bit_maze
 
 
-def create_conexion(cell1: Cell, cell2:Cell, direction) -> None:
+def create_conexion(cell1: Cell, cell2: Cell, direction) -> None:
     if direction == "north":
         cell1.north = 0
         cell2.south = 0
@@ -78,9 +124,9 @@ def create_conexion(cell1: Cell, cell2:Cell, direction) -> None:
         cell2.east = 0
     else:
         return
-    
-    
-def check_valid_neighbours(maze: object, x: int, y: int) -> list:
+
+
+def check_valid_neighbours(maze: object, y: int, x: int) -> list:
     neighbour_list = []
     if x > 0:
         neighbour1 = y, x - 1
@@ -95,19 +141,93 @@ def check_valid_neighbours(maze: object, x: int, y: int) -> list:
         neighbour4 = y + 1, x
         neighbour_list.append(neighbour4)
     return neighbour_list
-         
 
 
+def check_open_neighbours(maze: object, y: int, x: int) -> list:
+    neighbour_list = []
+
+    if maze[y, x].north == 0:
+        neighbour_list.append((y - 1, x))
+    if maze[y, x].south == 0:
+        neighbour_list.append((y + 1, x))
+    if maze[y, x].east == 0:
+        neighbour_list.append((y, x - 1))
+    if maze[y, x].west == 0:
+        neighbour_list.append((y, x + 1))
+    return neighbour_list
+
+
+def reading_the_dict(parents_dict: dict, end_position: tuple) -> str:
+    before_end = list(parents_dict.keys())[-1]
+    print("before end:", before_end)
+
+    path = [end_position, before_end]
+
+    while before_end != (0, 0):
+        temp = parents_dict[before_end]
+    #    print(temp)
+        path.append(temp)
+        before_end = temp
+
+    print("path:", path)
+
+    result = ""
+
+    for position_number in range((len(path)) - 1):
+        initial_position = path[position_number]
+        next_position = path[position_number + 1]
+        direction = short_direction(initial_position, next_position)
+        result += direction
+
+    return result
+
+
+def finding_the_way(maze: object, init: tuple, end: tuple) -> str:
+
+    height = len(maze)
+    width = len(maze[0])
+
+    visited_maze = create_visited_maze(width, height)
+
+    qeue = [init]
+    parents_dict = {}
+
+    while (qeue):
+        visited_maze[qeue[0]] = True
+
+        valid_neighbours = check_open_neighbours(maze, qeue[0][0], qeue[0][1])
+
+        not_visited_neighbours = [neighbours for neighbours in valid_neighbours
+                                  if visited_maze[neighbours] is False]
+
+        if end in not_visited_neighbours:
+            break
+
+        for neighbour in not_visited_neighbours:
+            parents_dict.update({neighbour: qeue[0]})
+
+        qeue.pop(0)
+        for member in not_visited_neighbours:
+            qeue.append(member)
+            visited_maze[member] = True
+
+        print("qeue", qeue)
+
+    print("parents dict", parents_dict)
+    print(visited_maze)
+
+    final_path = reading_the_dict(parents_dict, end)
+
+    return (final_path)
 
 
 if __name__ == "__main__":
     width = 3
-    height = 10
+    height = 2
     maze = create_maze(width, height)
     visited_maze = create_visited_maze(width, height)
-    #inicial position = 0, 0
-    initial_x = 0
     initial_y = 0
+    initial_x = 0
     initial_position = (initial_y, initial_x)
     visited_maze[initial_y, initial_x] = True
     visited_list = [(initial_y, initial_x)]
@@ -115,13 +235,14 @@ if __name__ == "__main__":
     # print(hex_maze)
 
     while visited_list:
-        
-        x = visited_list[-1][1]
+
         y = visited_list[-1][0]
-    
-        valid_neighbours = check_valid_neighbours(maze, x , y)
-        not_visited_neighbours = [neighbours for neighbours in valid_neighbours if visited_maze[neighbours] is False]
-        
+        x = visited_list[-1][1]
+
+        valid_neighbours = check_valid_neighbours(maze, y, x)
+        not_visited_neighbours = [neighbours for neighbours in valid_neighbours
+                                  if visited_maze[neighbours] is False]
+
         if not_visited_neighbours:
             next_cell = random.choice(not_visited_neighbours)
             visited_list.append(next_cell)
@@ -131,29 +252,30 @@ if __name__ == "__main__":
             next_x = next_cell[1]
             next_y = next_cell[0]
 
-            if y - next_y == -1:
-                direction = "south"
-            elif y - next_y == 1:
-                direction = "north"
-            elif x - next_x == -1:
-                direction = "west"
-            elif x - next_x == 1 :
-                direction = "east"
+            direction = define_direction((y, x), (next_y, next_x))
 
             create_conexion(maze[y, x], maze[next_y, next_x], direction)
             visited_maze[next_cell[0], next_cell[1]] = True
-            #print(visited_maze)
-            #print(visited_list)
+
         else:
             visited_list.pop()
-    print(visited_list)
+
     print(visited_maze)
 
     hex_maze = create_hex_maze(maze, width, height)
     print(hex_maze)
     bit_maze = create_bit_maze(maze, width, height)
     print(bit_maze)
-    print("north", maze[0,0].north)
-    print("east", maze[0,0].east)
-    print("south", maze[0,0].south)
-    print("west", maze[0,0].west)
+
+    end = (2, 1)
+    final_path = finding_the_way(maze, initial_position, end)
+    print("final path:", final_path)
+
+    with open("data.txt", "w") as archive:
+        for row in hex_maze:
+            print("".join(row))
+            archive.write("".join(row) + "\n")
+        archive.write("\n")
+        archive.write(f"{initial_y},{initial_x}\n")
+        archive.write(f"{end[0]},{end[1]}\n")
+        archive.write(f"{final_path}")
