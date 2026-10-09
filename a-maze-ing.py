@@ -131,7 +131,11 @@ def create_conexion(cell1: Cell, cell2: Cell, direction) -> None:
 
 
 def check_valid_neighbours(maze: object, y: int, x: int) -> list:
+    height = maze.shape[0]
+    width = maze.shape[1]
+    
     neighbour_list = []
+
     if x > 0:
         neighbour1 = y, x - 1
         neighbour_list.append(neighbour1)
@@ -188,8 +192,8 @@ def reading_the_dict(parents_dict: dict, end_position: tuple[int, int]) -> str:
 def finding_the_way(maze: object, init: tuple[int, int],
                     end: tuple[int, int]) -> str:
 
-    height = len(maze)
-    width = len(maze[0])
+    height = maze.shape[0]
+    width = maze.shape[1]
 
     visited_maze = create_visited_maze(width, height)
 
@@ -221,8 +225,8 @@ def finding_the_way(maze: object, init: tuple[int, int],
 
 def create_42(visited_maze: object) -> str:
 
-    height = len(maze)
-    width = len(maze[0])
+    height = maze.shape[0]
+    width = maze.shape[1]
 
     if height < 7:
         return ("Height not enough")
@@ -261,7 +265,7 @@ class Config_Dict(BaseModel):
     height: int = Field(ge=3, le=100)
     entry: tuple[int, int]
     exit_pos: tuple[int, int]
-    output_file: str = Field[max_length=100]
+    output_file: str = Field(max_length=100)
     perfect: bool
     seed: Optional[int] = None
 
