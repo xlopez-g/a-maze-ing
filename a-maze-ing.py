@@ -302,32 +302,37 @@ if __name__ == "__main__":
             key, value = line.split("=", 1)
             config[key.strip()] = value.strip()
 
-    width = int(config["WIDTH"])
-    height = int(config["HEIGHT"])
+    try:
 
-    entry = config["ENTRY"]
-    entry_list = entry.split(",")
-    initial_position_str = (entry_list[1], entry_list[0])
-    initial_y = int(initial_position_str[0])
-    initial_x = int(initial_position_str[1])
+        width = int(config["WIDTH"])
+        height = int(config["HEIGHT"])
 
-    initial_position = (initial_y, initial_x)
+        entry = config["ENTRY"]
+        entry_list = entry.split(",")
+        initial_position_str = (entry_list[1], entry_list[0])
+        initial_y = int(initial_position_str[0])
+        initial_x = int(initial_position_str[1])
 
-    exit_pos = config["EXIT"]
-    exit_list = exit_pos.split(",")
-    end_position_str = (exit_list[1], exit_list[0])
-    end_y = int(end_position_str[0])
-    end_x = int(end_position_str[1])
+        initial_position = (initial_y, initial_x)
 
-    end_position = (end_y, end_x)
+        exit_pos = config["EXIT"]
+        exit_list = exit_pos.split(",")
+        end_position_str = (exit_list[1], exit_list[0])
+        end_y = int(end_position_str[0])
+        end_x = int(end_position_str[1])
 
-    output_file = config["OUTPUT_FILE"]
-    perfect = config["PERFECT"]
+        end_position = (end_y, end_x)
 
-    if "SEED" in config:
-        seed = config["SEED"]
-    else:
-        seed = None
+        output_file = config["OUTPUT_FILE"]
+        perfect = config["PERFECT"]
+
+        if "SEED" in config:
+            seed = config["SEED"]
+        else:
+            seed = None
+
+    except ValidationError as e:
+        print(e.errors()[0]["msg"])
 
     valid_dict = Config_Dict(width=width,
                              height=height,
