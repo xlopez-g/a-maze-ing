@@ -130,6 +130,26 @@ def create_conexion(cell1: Cell, cell2: Cell, direction) -> None:
         return
 
 
+def create_wall(cell1: Cell, cell2: Cell, direction) -> None:
+    if direction == "north":
+        cell1.north = 1
+        cell2.south = 1
+
+    elif direction == "east":
+        cell1.east = 1
+        cell2.west = 1
+
+    elif direction == "south":
+        cell1.south = 1
+        cell2.north = 1
+
+    elif direction == "west":
+        cell1.west = 1
+        cell2.east = 1
+    else:
+        return
+
+
 def check_valid_neighbours(maze: object, y: int, x: int) -> list:
     height = maze.shape[0]
     width = maze.shape[1]
@@ -147,6 +167,31 @@ def check_valid_neighbours(maze: object, y: int, x: int) -> list:
         neighbour_list.append(neighbour3)
     if y < height - 1:
         neighbour4 = y + 1, x
+        neighbour_list.append(neighbour4)
+    return neighbour_list
+
+
+def openable_neighbours(maze: object, position: tuple[int, int],
+                        fourty_two_list: list[tuple[int, int]]) -> list:
+    height = maze.shape[0]
+    width = maze.shape[1]
+
+    x = position[1]
+    y = position[0]
+
+    neighbour_list = []
+    neighbour1 = y, x - 1
+    neighbour2 = y, x + 1
+    neighbour3 = y - 1, x
+    neighbour4 = y + 1, x
+
+    if x > 0 and maze[y, x].east == 1 and neighbour1 not in fourty_two_list:
+        neighbour_list.append(neighbour1)
+    if x < width - 1 and maze[y, x].west == 1 and neighbour2 not in fourty_two_list:
+        neighbour_list.append(neighbour2)
+    if y > 0 and maze[y, x].north == 1 and neighbour3 not in fourty_two_list:
+        neighbour_list.append(neighbour3)
+    if y < height - 1 and maze[y, x].south == 1 and neighbour4 not in fourty_two_list:
         neighbour_list.append(neighbour4)
     return neighbour_list
 
@@ -223,20 +268,27 @@ def finding_the_way(maze: object, init: tuple[int, int],
     return (final_path)
 
 
-def create_42(visited_maze: object) -> str:
+def create_42(visited_maze: object) -> list[list[int, int]]:
 
-    height = maze.shape[0]
-    width = maze.shape[1]
-
-    if height < 7:
-        return ("Height not enough")
-
-    if width < 9:
-        return ("Width not enough")
+    height = visited_maze.shape[0]
+    width = visited_maze.shape[1]
 
     x: int = int(width / 2)
     y: int = int(height / 2)
 
+    fourty_two_list = [(y - 2, x - 3), (y - 1, x - 3), (y, x - 3), (y, x - 2),
+                      (y, x - 1), (y + 1, x - 1), (y + 2, x - 1),
+                      (y - 2, x + 1), (y - 2, x + 2), (y - 2, x + 3),
+                      (y - 1, x + 3), (y, x + 3), (y, x + 2), (y, x + 1),
+                      (y + 1, x + 1), (y + 2, x + 1), (y + 2, x + 2),
+                      (y + 2, x + 3)
+                      ]
+
+    for y_coord, xcoord in fourty_two_list:
+        visited_maze[y_coord, xcoord] = True
+
+    return fourty_two_list
+'''
     visited_maze[y - 2, x - 3] = True
     visited_maze[y - 1, x - 3] = True
     visited_maze[y, x - 3] = True
@@ -256,8 +308,7 @@ def create_42(visited_maze: object) -> str:
     visited_maze[y + 2, x + 1] = True
     visited_maze[y + 2, x + 2] = True
     visited_maze[y + 2, x + 3] = True
-
-    return ("ok")
+'''
 
 
 class Config_Dict(BaseModel):
@@ -289,6 +340,86 @@ class Config_Dict(BaseModel):
         return (self)
 
 
+def three_wall_cells(maze: object) -> list[tuple[int, int]]:
+    three_wall_list = []
+
+    height = visited_maze.shape[0]
+    width = visited_maze.shape[1]
+
+    for x in range(width):
+        for y in range(height):
+            cell = maze[y, x]
+            if (cell.north + cell.east + cell.south + cell.west) == 3:
+                three_wall_list.append((y, x))
+
+    print("lista d 3paredes", three_wall_list)
+    
+    return(three_wall_list)
+
+
+def open_corners(maze) -> None:
+
+    height = maze.shape[0]
+    width = maze.shape[1]
+
+    if maze[0, 0].south != 0:
+        create_conexion(maze[0, 0], maze[1, 0], "south")
+    if maze[0, 0].west != 0:
+        create_conexion(maze[0, 0], maze[0, 1], "east")
+
+    if maze[height - 1, 0].north != 0:
+        create_conexion(maze[height - 1, 0], maze[height - 2, 0], "north")
+    if maze[height - 1, 0].west != 0:
+        create_conexion(maze[height - 1, 0], maze[height - 1, 1], "east")
+
+    if maze[0, width - 1].south != 0:
+        create_conexion(maze[0, width - 1], maze[1, width - 1], "south")
+    if maze[0, width - 1].east != 0:
+        create_conexion(maze[0, width - 1], maze[0, width - 2], "west")
+
+    if maze[height - 1, width - 1].north != 0:
+        create_conexion(maze[height - 2, width - 1], maze[height - 1, width - 1], "south")
+    if maze[height - 1, width - 1].east != 0:
+        create_conexion(maze[height - 1, width - 1], maze[height - 1, width - 2], "west")
+
+
+def check_zero_around(maze, position: tuple[int, int]) -> bool:
+    y = position[0]
+    x = position[1]
+
+    result = True
+
+    if maze[y - 1, x - 1].south != 0 or maze[y - 1, x - 1].east != 0:
+        return (False)
+
+    if maze[y + 1, x - 1].north != 0 or maze[y + 1, x - 1].east != 0:
+        return (False)
+
+    if maze[y - 1, x + 1].south != 0 or maze[y - 1, x + 1].west != 0:
+        return (False)
+
+    if maze[y + 1, x + 1].north != 0 or maze[y + 1, x + 1].west != 0:
+        return (False)
+
+    return(result)
+
+
+def check_threexthree_area(maze) -> bool:
+    result  = False
+    height = maze.shape[0]
+    width = maze.shape[1]
+
+    for x in range(1, width - 1):
+        for y in range(1, height - 1):
+            cell = maze[y, x]
+            cell_sum = cell.north + cell.east + cell.south + cell.west
+            if cell_sum == 0:
+                if check_zero_around(maze, (y, x)):
+                    return True
+
+    return (result)
+
+
 if __name__ == "__main__":
 
     config = {}
@@ -302,52 +433,60 @@ if __name__ == "__main__":
             key, value = line.split("=", 1)
             config[key.strip()] = value.strip()
 
+    width = int(config["WIDTH"])
+    height = int(config["HEIGHT"])
+
+    entry = config["ENTRY"]
+    entry_list = entry.split(",")
+    initial_position_str = (entry_list[1], entry_list[0])
+    initial_y = int(initial_position_str[0])
+    initial_x = int(initial_position_str[1])
+
+    initial_position = (initial_y, initial_x)
+
+    exit_pos = config["EXIT"]
+    exit_list = exit_pos.split(",")
+    end_position_str = (exit_list[1], exit_list[0])
+    end_y = int(end_position_str[0])
+    end_x = int(end_position_str[1])
+
+    end_position = (end_y, end_x)
+
+    output_file = config["OUTPUT_FILE"]
+    perfect: bool = config["PERFECT"]
+
+    if "SEED" in config:
+        seed = config["SEED"]
+    else:
+        seed = None
+
     try:
-
-        width = int(config["WIDTH"])
-        height = int(config["HEIGHT"])
-
-        entry = config["ENTRY"]
-        entry_list = entry.split(",")
-        initial_position_str = (entry_list[1], entry_list[0])
-        initial_y = int(initial_position_str[0])
-        initial_x = int(initial_position_str[1])
-
-        initial_position = (initial_y, initial_x)
-
-        exit_pos = config["EXIT"]
-        exit_list = exit_pos.split(",")
-        end_position_str = (exit_list[1], exit_list[0])
-        end_y = int(end_position_str[0])
-        end_x = int(end_position_str[1])
-
-        end_position = (end_y, end_x)
-
-        output_file = config["OUTPUT_FILE"]
-        perfect = config["PERFECT"]
-
-        if "SEED" in config:
-            seed = config["SEED"]
-        else:
-            seed = None
+        valid_dict = Config_Dict(width=width,
+                                height=height,
+                                entry=initial_position,
+                                exit_pos=end_position,
+                                output_file=output_file,
+                                perfect=perfect,
+                                seed=seed
+                                )
 
     except ValidationError as e:
         print(e.errors()[0]["msg"])
-
-    valid_dict = Config_Dict(width=width,
-                             height=height,
-                             entry=initial_position,
-                             exit_pos=end_position,
-                             output_file=output_file,
-                             perfect=perfect,
-                             seed=seed
-                             )
 
     print(valid_dict)
 
     maze = create_maze(width, height)
     visited_maze = create_visited_maze(width, height)
-    maze_message = create_42(visited_maze)
+
+    if height < 7:
+        raise ValueError("Height not enough for 42 picture")
+
+    elif width < 9:
+        raise ValueError("Width not enough for 42 picture")
+
+    else:
+        fourty_two_list = create_42(visited_maze)
+        print("fourty lis", fourty_two_list)
 
     visited_maze[initial_y, initial_x] = True
     visited_list = [(initial_y, initial_x)]
@@ -377,6 +516,33 @@ if __name__ == "__main__":
 
         else:
             visited_list.pop()
+
+
+    if valid_dict.perfect is False:
+        print("perfect", perfect)
+        open_corners(maze)
+
+        three_wall_list = three_wall_cells(maze)
+        center_x: int = int(width / 2)
+        center_y: int = int(height / 2)
+        three_wall_list.remove((center_y - 1, center_x + 2))
+        three_wall_list.remove((center_y + 1, center_x + 2))
+
+        while (three_wall_list) != []:
+            three_wall_position = three_wall_list[0]
+            openable_list = openable_neighbours(maze, three_wall_position, fourty_two_list)
+            print(three_wall_position, openable_list)
+            for posible_opening in openable_list:
+                direction = define_direction(three_wall_position, posible_opening)
+                create_conexion(maze[three_wall_position], maze[posible_opening], direction)
+                if check_threexthree_area == True:
+                    create_wall(three_wall_position, neighbour, direction)
+            
+            three_wall_list.pop(0)
+
+
+
+
 
     hex_maze = create_hex_maze(maze, width, height)
     bit_maze = create_bit_maze(maze, width, height)
