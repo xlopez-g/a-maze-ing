@@ -2,6 +2,7 @@ import numpy as np
 import random
 from pydantic import BaseModel, Field, model_validator, ValidationError
 from typing import Optional
+import sys
 
 
 class Cell:
@@ -29,7 +30,6 @@ def create_maze(width: int, height: int) -> object:
     for column in range(width):
         for row in range(height):
             maze[row, column] = Cell()
-#    print(maze[0, 0].north)
     return maze
 
 
@@ -153,7 +153,7 @@ def create_wall(cell1: Cell, cell2: Cell, direction) -> None:
 def check_valid_neighbours(maze: object, y: int, x: int) -> list:
     height = maze.shape[0]
     width = maze.shape[1]
-    
+
     neighbour_list = []
 
     if x > 0:
@@ -185,14 +185,22 @@ def openable_neighbours(maze: object, position: tuple[int, int],
     neighbour3 = y - 1, x
     neighbour4 = y + 1, x
 
-    if x > 0 and maze[y, x].east == 1 and neighbour1 not in fourty_two_list:
+    if (x > 0 and maze[y, x].east == 1
+            and neighbour1 not in fourty_two_list):
         neighbour_list.append(neighbour1)
-    if x < width - 1 and maze[y, x].west == 1 and neighbour2 not in fourty_two_list:
+
+    if (x < width - 1 and maze[y, x].west == 1
+            and neighbour2 not in fourty_two_list):
         neighbour_list.append(neighbour2)
-    if y > 0 and maze[y, x].north == 1 and neighbour3 not in fourty_two_list:
+
+    if (y > 0 and maze[y, x].north == 1
+            and neighbour3 not in fourty_two_list):
         neighbour_list.append(neighbour3)
-    if y < height - 1 and maze[y, x].south == 1 and neighbour4 not in fourty_two_list:
+
+    if (y < height - 1 and maze[y, x].south == 1
+            and neighbour4 not in fourty_two_list):
         neighbour_list.append(neighbour4)
+
     return neighbour_list
 
 
@@ -277,38 +285,17 @@ def create_42(visited_maze: object) -> list[list[int, int]]:
     y: int = int(height / 2)
 
     fourty_two_list = [(y - 2, x - 3), (y - 1, x - 3), (y, x - 3), (y, x - 2),
-                      (y, x - 1), (y + 1, x - 1), (y + 2, x - 1),
-                      (y - 2, x + 1), (y - 2, x + 2), (y - 2, x + 3),
-                      (y - 1, x + 3), (y, x + 3), (y, x + 2), (y, x + 1),
-                      (y + 1, x + 1), (y + 2, x + 1), (y + 2, x + 2),
-                      (y + 2, x + 3)
-                      ]
+                       (y, x - 1), (y + 1, x - 1), (y + 2, x - 1),
+                       (y - 2, x + 1), (y - 2, x + 2), (y - 2, x + 3),
+                       (y - 1, x + 3), (y, x + 3), (y, x + 2), (y, x + 1),
+                       (y + 1, x + 1), (y + 2, x + 1), (y + 2, x + 2),
+                       (y + 2, x + 3)
+                       ]
 
     for y_coord, xcoord in fourty_two_list:
         visited_maze[y_coord, xcoord] = True
 
     return fourty_two_list
-'''
-    visited_maze[y - 2, x - 3] = True
-    visited_maze[y - 1, x - 3] = True
-    visited_maze[y, x - 3] = True
-    visited_maze[y, x - 2] = True
-    visited_maze[y, x - 1] = True
-    visited_maze[y + 1, x - 1] = True
-    visited_maze[y + 2, x - 1] = True
-
-    visited_maze[y - 2, x + 1] = True
-    visited_maze[y - 2, x + 2] = True
-    visited_maze[y - 2, x + 3] = True
-    visited_maze[y - 1, x + 3] = True
-    visited_maze[y, x + 3] = True
-    visited_maze[y, x + 2] = True
-    visited_maze[y, x + 1] = True
-    visited_maze[y + 1, x + 1] = True
-    visited_maze[y + 2, x + 1] = True
-    visited_maze[y + 2, x + 2] = True
-    visited_maze[y + 2, x + 3] = True
-'''
 
 
 class Config_Dict(BaseModel):
@@ -337,6 +324,15 @@ class Config_Dict(BaseModel):
         if entry == exit_pos:
             raise ValueError("Exit can not be equal entry")
 
+        if output_file == "config.txt":
+            raise ValueError("Do not overwrite config.txt")
+
+        if not output_file.endswith("txt"):
+            raise ValueError("Output file must end by .txt")
+
+        if output_file.startswith("."):
+            raise ValueError("Output file must be in this folder")
+
         return (self)
 
 
@@ -353,8 +349,8 @@ def three_wall_cells(maze: object) -> list[tuple[int, int]]:
                 three_wall_list.append((y, x))
 
     print("lista d 3paredes", three_wall_list)
-    
-    return(three_wall_list)
+
+    return (three_wall_list)
 
 
 def open_corners(maze) -> None:
@@ -378,9 +374,11 @@ def open_corners(maze) -> None:
         create_conexion(maze[0, width - 1], maze[0, width - 2], "west")
 
     if maze[height - 1, width - 1].north != 0:
-        create_conexion(maze[height - 2, width - 1], maze[height - 1, width - 1], "south")
+        create_conexion(maze[height - 2, width - 1],
+                        maze[height - 1, width - 1], "south")
     if maze[height - 1, width - 1].east != 0:
-        create_conexion(maze[height - 1, width - 1], maze[height - 1, width - 2], "west")
+        create_conexion(maze[height - 1, width - 1],
+                        maze[height - 1, width - 2], "west")
 
 
 def check_zero_around(maze, position: tuple[int, int]) -> bool:
@@ -401,11 +399,11 @@ def check_zero_around(maze, position: tuple[int, int]) -> bool:
     if maze[y + 1, x + 1].north != 0 or maze[y + 1, x + 1].west != 0:
         return (False)
 
-    return(result)
+    return (result)
 
 
 def check_threexthree_area(maze) -> bool:
-    result  = False
+    result = False
     height = maze.shape[0]
     width = maze.shape[1]
 
@@ -462,31 +460,44 @@ if __name__ == "__main__":
 
     try:
         valid_dict = Config_Dict(width=width,
-                                height=height,
-                                entry=initial_position,
-                                exit_pos=end_position,
-                                output_file=output_file,
-                                perfect=perfect,
-                                seed=seed
-                                )
+                                 height=height,
+                                 entry=initial_position,
+                                 exit_pos=end_position,
+                                 output_file=output_file,
+                                 perfect=perfect,
+                                 seed=seed
+                                 )
 
     except ValidationError as e:
         print(e.errors()[0]["msg"])
+        sys.exit()
 
     print(valid_dict)
 
     maze = create_maze(width, height)
     visited_maze = create_visited_maze(width, height)
 
+    fourty_two_bool = False
+
     if height < 7:
-        raise ValueError("Height not enough for 42 picture")
+        print("Height not enough for 42 picture")
+        fourty_two_list = []
 
     elif width < 9:
-        raise ValueError("Width not enough for 42 picture")
+        print("Width not enough for 42 picture")
+        fourty_two_list = []
 
     else:
+        fourty_two_bool = True
         fourty_two_list = create_42(visited_maze)
-        print("fourty lis", fourty_two_list)
+
+    if valid_dict.entry in fourty_two_list:
+        print("Entry can not be in 42 picture")
+        sys.exit()
+
+    if valid_dict.exit_pos in fourty_two_list:
+        print("Exit can not be in 42 picture")
+        sys.exit()
 
     visited_maze[initial_y, initial_x] = True
     visited_list = [(initial_y, initial_x)]
@@ -517,32 +528,32 @@ if __name__ == "__main__":
         else:
             visited_list.pop()
 
-
     if valid_dict.perfect is False:
-        print("perfect", perfect)
         open_corners(maze)
 
         three_wall_list = three_wall_cells(maze)
         center_x: int = int(width / 2)
         center_y: int = int(height / 2)
-        three_wall_list.remove((center_y - 1, center_x + 2))
-        three_wall_list.remove((center_y + 1, center_x + 2))
+
+        if fourty_two_bool:
+            three_wall_list.remove((center_y - 1, center_x + 2))
+            three_wall_list.remove((center_y + 1, center_x + 2))
 
         while (three_wall_list) != []:
             three_wall_position = three_wall_list[0]
-            openable_list = openable_neighbours(maze, three_wall_position, fourty_two_list)
+            openable_list = openable_neighbours(maze, three_wall_position,
+                                                fourty_two_list)
             print(three_wall_position, openable_list)
             for posible_opening in openable_list:
-                direction = define_direction(three_wall_position, posible_opening)
-                create_conexion(maze[three_wall_position], maze[posible_opening], direction)
-                if check_threexthree_area == True:
-                    create_wall(three_wall_position, neighbour, direction)
-            
+                direction = define_direction(three_wall_position,
+                                             posible_opening)
+                create_conexion(maze[three_wall_position],
+                                maze[posible_opening], direction)
+                if check_threexthree_area is True:
+                    create_wall(three_wall_position,
+                                posible_opening, direction)
+
             three_wall_list.pop(0)
-
-
-
-
 
     hex_maze = create_hex_maze(maze, width, height)
     bit_maze = create_bit_maze(maze, width, height)
