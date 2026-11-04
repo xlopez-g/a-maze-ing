@@ -1,19 +1,25 @@
 import numpy as np
+
+import numpy.typing as npt
+
 import random
+
 from pydantic import BaseModel, Field, model_validator, ValidationError
-from typing import Optional
+
 import sys
+
+from parser import parser, reader
 
 
 class Cell:
-    def __init__(self):
+    def __init__(self) -> None:
         self.north = 1
         self.east = 1
         self.south = 1
         self.west = 1
 
 
-def create_visited_maze(width: int, height: int) -> object:
+def create_visited_maze(width: int, height: int) -> npt.NDArray[np.bool_]:
 
     visited_maze = np.empty((height, width), dtype=object)
 
@@ -23,7 +29,7 @@ def create_visited_maze(width: int, height: int) -> object:
     return visited_maze
 
 
-def create_maze(width: int, height: int) -> object:
+def create_maze(width: int, height: int) -> npt.NDArray[np.object_]:
 
     maze = np.empty((height, width), dtype=object)
 
@@ -84,18 +90,24 @@ def calculate_hex(cell: Cell) -> str:
     return format(result, "X")
 
 
-def create_hex_maze(maze: object, width: int, height: int) -> object:
+def create_hex_maze(maze: npt.NDArray[np.object_],
+                    width: int,
+                    height: int
+                    ) -> npt.NDArray[np.object_]:
 
     hex_maze = np.empty((height, width), dtype=object)
 
     for x in range(width):
         for y in range(height):
             hex_maze[y, x] = calculate_hex(maze[y, x])
-#    print(maze[0, 0].north)
+
     return hex_maze
 
 
-def create_bit_maze(maze: object, width: int, height: int) -> object:
+def create_bit_maze(maze: npt.NDArray[np.object_],
+                    width: int,
+                    height: int
+                    ) -> npt.NDArray[np.int_]:
 
     bit_maze = np.empty((height, width), dtype=int)
 
@@ -110,7 +122,10 @@ def create_bit_maze(maze: object, width: int, height: int) -> object:
     return bit_maze
 
 
-def create_conexion(cell1: Cell, cell2: Cell, direction) -> None:
+def create_conexion(cell1: Cell,
+                    cell2: Cell,
+                    direction: str) -> None:
+
     if direction == "north":
         cell1.north = 0
         cell2.south = 0
@@ -130,7 +145,10 @@ def create_conexion(cell1: Cell, cell2: Cell, direction) -> None:
         return
 
 
-def create_wall(cell1: Cell, cell2: Cell, direction) -> None:
+def create_wall(cell1: Cell,
+                cell2: Cell,
+                direction: str) -> None:
+
     if direction == "north":
         cell1.north = 1
         cell2.south = 1
@@ -150,7 +168,11 @@ def create_wall(cell1: Cell, cell2: Cell, direction) -> None:
         return
 
 
-def check_valid_neighbours(maze: object, y: int, x: int) -> list:
+def check_valid_neighbours(maze: npt.NDArray[np.object_],
+                           y: int,
+                           x: int
+                           ) -> list[tuple[int, int]]:
+
     height = maze.shape[0]
     width = maze.shape[1]
 
@@ -171,8 +193,11 @@ def check_valid_neighbours(maze: object, y: int, x: int) -> list:
     return neighbour_list
 
 
-def openable_neighbours(maze: object, position: tuple[int, int],
-                        fourty_two_list: list[tuple[int, int]]) -> list:
+def openable_neighbours(maze: npt.NDArray[np.object_],
+                        position: tuple[int, int],
+                        fourty_two_list: list[tuple[int, int]]
+                        ) -> list[tuple[int, int]]:
+
     height = maze.shape[0]
     width = maze.shape[1]
 
@@ -204,7 +229,10 @@ def openable_neighbours(maze: object, position: tuple[int, int],
     return neighbour_list
 
 
-def check_open_neighbours(maze: object, y: int, x: int) -> list:
+def check_open_neighbours(maze: npt.NDArray[np.object_],
+                          y: int,
+                          x: int) -> list[tuple[int, int]]:
+
     neighbour_list = []
 
     if maze[y, x].north == 0:
@@ -218,15 +246,19 @@ def check_open_neighbours(maze: object, y: int, x: int) -> list:
     return neighbour_list
 
 
-def reading_the_dict(parents_dict: dict, end_position: tuple[int, int]) -> str:
+def reading_the_dict(parents_dict: dict[tuple[int, int], tuple[int, int]],
+                     end_position: tuple[int, int]
+                     ) -> str:
 
     path = [end_position]
 
-    while end_position != (0, 0):
-        temp = parents_dict[end_position]
+    step = end_position
+
+    while step != (0, 0):
+        parent = parents_dict[step]
     #    print(temp)
-        path.append(temp)
-        end_position = temp
+        path.append(parent)
+        step = parent
 
     # print("path:", path)
     # print("len(path)", len(path))
@@ -242,8 +274,10 @@ def reading_the_dict(parents_dict: dict, end_position: tuple[int, int]) -> str:
     return result
 
 
-def finding_the_way(maze: object, init: tuple[int, int],
-                    end: tuple[int, int]) -> str:
+def finding_the_way(maze: npt.NDArray[np.object_],
+                    init: tuple[int, int],
+                    end: tuple[int, int]
+                    ) -> str:
 
     height = maze.shape[0]
     width = maze.shape[1]
@@ -251,7 +285,7 @@ def finding_the_way(maze: object, init: tuple[int, int],
     visited_maze = create_visited_maze(width, height)
 
     qeue = [init]
-    parents_dict = {}
+    parents_dict: dict[tuple[int, int], tuple[int, int]] = {}
 
     while (qeue):
         visited_maze[qeue[0]] = True
@@ -276,67 +310,42 @@ def finding_the_way(maze: object, init: tuple[int, int],
     return (final_path)
 
 
-def create_42(visited_maze: object) -> list[list[int, int]]:
+def create_42(visited_maze: npt.NDArray[np.bool_]
+              ) -> list[tuple[int, int] | None]:
 
     height = visited_maze.shape[0]
     width = visited_maze.shape[1]
 
-    x: int = int(width / 2)
-    y: int = int(height / 2)
+    if height < 7:
+        print("Height not enough for 42 picture")
+        return []
 
-    fourty_two_list = [(y - 2, x - 3), (y - 1, x - 3), (y, x - 3), (y, x - 2),
-                       (y, x - 1), (y + 1, x - 1), (y + 2, x - 1),
-                       (y - 2, x + 1), (y - 2, x + 2), (y - 2, x + 3),
-                       (y - 1, x + 3), (y, x + 3), (y, x + 2), (y, x + 1),
-                       (y + 1, x + 1), (y + 2, x + 1), (y + 2, x + 2),
-                       (y + 2, x + 3)
-                       ]
+    elif width < 9:
+        print("Width not enough for 42 picture")
+        return []
 
-    for y_coord, xcoord in fourty_two_list:
-        visited_maze[y_coord, xcoord] = True
+    else:
+        
+        x = width // 2
+        y = height // 2
 
-    return fourty_two_list
+        fourty_two_list = [(y - 2, x - 3), (y - 1, x - 3), (y, x - 3), (y, x - 2),
+                           (y, x - 1), (y + 1, x - 1), (y + 2, x - 1),
+                           (y - 2, x + 1), (y - 2, x + 2), (y - 2, x + 3),
+                           (y - 1, x + 3), (y, x + 3), (y, x + 2), (y, x + 1),
+                           (y + 1, x + 1), (y + 2, x + 1), (y + 2, x + 2),
+                           (y + 2, x + 3)
+                           ]
 
+        for y_coord, xcoord in fourty_two_list:
+            visited_maze[y_coord, xcoord] = True
 
-class Config_Dict(BaseModel):
-    width: int = Field(ge=3, le=100)
-    height: int = Field(ge=3, le=100)
-    entry: tuple[int, int]
-    exit_pos: tuple[int, int]
-    output_file: str = Field(max_length=100)
-    perfect: bool
-    seed: Optional[int] = None
-
-    @model_validator(mode='after')
-    def parameter_checker(self) -> 'Config_Dict':
-        if self.entry[0] >= self.height or self.entry[0] < 0:
-            raise ValueError("Entry parameter out of range")
-
-        if self.entry[1] >= self.width or self.entry[1] < 0:
-            raise ValueError("Entry parameter out of range")
-
-        if self.exit_pos[0] >= self.height or self.exit_pos[0] < 0:
-            raise ValueError("Exit parameter out of range")
-
-        if self.exit_pos[1] >= self.width or self.exit_pos[1] < 0:
-            raise ValueError("Exit parameter out of range")
-
-        if entry == exit_pos:
-            raise ValueError("Exit can not be equal entry")
-
-        if output_file == "config.txt":
-            raise ValueError("Do not overwrite config.txt")
-
-        if not output_file.endswith("txt"):
-            raise ValueError("Output file must end by .txt")
-
-        if output_file.startswith("."):
-            raise ValueError("Output file must be in this folder")
-
-        return (self)
+        return fourty_two_list
 
 
-def three_wall_cells(maze: object) -> list[tuple[int, int]]:
+def three_wall_cells(maze: npt.NDArray[np.object_]
+                     ) -> list[tuple[int, int]]:
+
     three_wall_list = []
 
     height = visited_maze.shape[0]
@@ -353,7 +362,7 @@ def three_wall_cells(maze: object) -> list[tuple[int, int]]:
     return (three_wall_list)
 
 
-def open_corners(maze) -> None:
+def open_corners(maze: npt.NDArray[np.object_]) -> None:
 
     height = maze.shape[0]
     width = maze.shape[1]
@@ -381,7 +390,10 @@ def open_corners(maze) -> None:
                         maze[height - 1, width - 2], "west")
 
 
-def check_zero_around(maze, position: tuple[int, int]) -> bool:
+def check_zero_around(maze: npt.NDArray[np.object_],
+                      position: tuple[int, int]
+                      ) -> bool:
+
     y = position[0]
     x = position[1]
 
@@ -402,7 +414,7 @@ def check_zero_around(maze, position: tuple[int, int]) -> bool:
     return (result)
 
 
-def check_threexthree_area(maze) -> bool:
+def check_threexthree_area(maze: npt.NDArray[np.object_]) -> bool:
     result = False
     height = maze.shape[0]
     width = maze.shape[1]
@@ -420,76 +432,19 @@ def check_threexthree_area(maze) -> bool:
 
 if __name__ == "__main__":
 
-    config = {}
-    with open("config.txt", "r") as open_config:
-        for line in open_config:
-            line = line.strip()
+    config = reader()
 
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-
-            key, value = line.split("=", 1)
-            config[key.strip()] = value.strip()
-
-    width = int(config["WIDTH"])
-    height = int(config["HEIGHT"])
-
-    entry = config["ENTRY"]
-    entry_list = entry.split(",")
-    initial_position_str = (entry_list[1], entry_list[0])
-    initial_y = int(initial_position_str[0])
-    initial_x = int(initial_position_str[1])
-
-    initial_position = (initial_y, initial_x)
-
-    exit_pos = config["EXIT"]
-    exit_list = exit_pos.split(",")
-    end_position_str = (exit_list[1], exit_list[0])
-    end_y = int(end_position_str[0])
-    end_x = int(end_position_str[1])
-
-    end_position = (end_y, end_x)
-
-    output_file = config["OUTPUT_FILE"]
-    perfect: bool = config["PERFECT"]
-
-    if "SEED" in config:
-        seed = config["SEED"]
-    else:
-        seed = None
-
-    try:
-        valid_dict = Config_Dict(width=width,
-                                 height=height,
-                                 entry=initial_position,
-                                 exit_pos=end_position,
-                                 output_file=output_file,
-                                 perfect=perfect,
-                                 seed=seed
-                                 )
-
-    except ValidationError as e:
-        print(e.errors()[0]["msg"])
-        sys.exit()
+    valid_dict = parser(config)
 
     print(valid_dict)
+
+    width = valid_dict.width
+    height = valid_dict.height
 
     maze = create_maze(width, height)
     visited_maze = create_visited_maze(width, height)
 
-    fourty_two_bool = False
-
-    if height < 7:
-        print("Height not enough for 42 picture")
-        fourty_two_list = []
-
-    elif width < 9:
-        print("Width not enough for 42 picture")
-        fourty_two_list = []
-
-    else:
-        fourty_two_bool = True
-        fourty_two_list = create_42(visited_maze)
+    fourty_two_list = create_42(visited_maze)
 
     if valid_dict.entry in fourty_two_list:
         print("Entry can not be in 42 picture")
@@ -498,6 +453,14 @@ if __name__ == "__main__":
     if valid_dict.exit_pos in fourty_two_list:
         print("Exit can not be in 42 picture")
         sys.exit()
+
+    initial_x, initial_y = valid_dict.entry
+    initial_position = (initial_x, initial_y)
+
+    end_x, end_y = valid_dict.exit_pos
+    end_position = (end_x, end_y)
+
+    output_file = valid_dict.output_file
 
     visited_maze[initial_y, initial_x] = True
     visited_list = [(initial_y, initial_x)]
@@ -532,10 +495,10 @@ if __name__ == "__main__":
         open_corners(maze)
 
         three_wall_list = three_wall_cells(maze)
-        center_x: int = int(width / 2)
-        center_y: int = int(height / 2)
+        center_x: int = width // 2
+        center_y: int = height // 2
 
-        if fourty_two_bool:
+        if fourty_two_list != []:
             three_wall_list.remove((center_y - 1, center_x + 2))
             three_wall_list.remove((center_y + 1, center_x + 2))
 
@@ -549,9 +512,9 @@ if __name__ == "__main__":
                                              posible_opening)
                 create_conexion(maze[three_wall_position],
                                 maze[posible_opening], direction)
-                if check_threexthree_area is True:
-                    create_wall(three_wall_position,
-                                posible_opening, direction)
+                if check_threexthree_area(maze) is True:
+                    create_wall(maze[three_wall_position],
+                                maze[posible_opening], direction)
 
             three_wall_list.pop(0)
 
