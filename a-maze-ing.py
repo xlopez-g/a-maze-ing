@@ -169,27 +169,32 @@ def create_wall(cell1: Cell,
 
 
 def check_valid_neighbours(maze: npt.NDArray[np.object_],
-                           y: int,
-                           x: int
+                           position: tuple[int, int]
                            ) -> list[tuple[int, int]]:
 
     height = maze.shape[0]
     width = maze.shape[1]
 
+    y, x = position
+
     neighbour_list = []
 
     if x > 0:
-        neighbour1 = y, x - 1
+        neighbour1 = (y, x - 1)
         neighbour_list.append(neighbour1)
+
     if x < width - 1:
-        neighbour2 = y, x + 1
+        neighbour2 = (y, x + 1)
         neighbour_list.append(neighbour2)
+
     if y > 0:
-        neighbour3 = y - 1, x
+        neighbour3 = (y - 1, x)
         neighbour_list.append(neighbour3)
+
     if y < height - 1:
-        neighbour4 = y + 1, x
+        neighbour4 = (y + 1, x)
         neighbour_list.append(neighbour4)
+
     return neighbour_list
 
 
@@ -310,19 +315,19 @@ def finding_the_way(maze: npt.NDArray[np.object_],
     return (final_path)
 
 
-def create_42(visited_maze: npt.NDArray[np.bool_]
-              ) -> list[tuple[int, int] | None]:
+def create_42(visited_maze: npt.NDArray[np.object_]
+              ) -> list[tuple[int, int]]:
 
     height = visited_maze.shape[0]
     width = visited_maze.shape[1]
 
     if height < 7:
         print("Height not enough for 42 picture")
-        return []
+        fourty_two_list: list[tuple[int, int]] = []
 
     elif width < 9:
         print("Width not enough for 42 picture")
-        return []
+        fourty_two_list = []
 
     else:
         
@@ -337,10 +342,7 @@ def create_42(visited_maze: npt.NDArray[np.bool_]
                            (y + 2, x + 3)
                            ]
 
-        for y_coord, xcoord in fourty_two_list:
-            visited_maze[y_coord, xcoord] = True
-
-        return fourty_two_list
+    return fourty_two_list
 
 
 def three_wall_cells(maze: npt.NDArray[np.object_]
@@ -348,8 +350,8 @@ def three_wall_cells(maze: npt.NDArray[np.object_]
 
     three_wall_list = []
 
-    height = visited_maze.shape[0]
-    width = visited_maze.shape[1]
+    height = maze.shape[0]
+    width = maze.shape[1]
 
     for x in range(width):
         for y in range(height):
@@ -430,6 +432,89 @@ def check_threexthree_area(maze: npt.NDArray[np.object_]) -> bool:
     return (result)
 
 
+def perfect_maze_solution(maze: npt.NDArray[np.object_],
+                          initial_x: int,
+                          initial_y: int,
+                          fourty_two_list: list[tuple[int, int]]
+                          ) -> npt.NDArray[np.object_]:
+
+    height = maze.shape[0]
+    width = maze.shape[1]
+    
+    visited_maze = create_visited_maze(width, height)
+    visited_list = [(initial_y, initial_x)]
+
+    visited_maze[initial_y, initial_x] = True
+
+    for y_coord, xcoord in fourty_two_list:
+        visited_maze[y_coord, xcoord] = True
+
+    while visited_list:
+
+        y = visited_list[-1][0]
+        x = visited_list[-1][1]
+
+        valid_neighbours = check_valid_neighbours(maze, (y, x))
+
+        not_visited_neighbours = [neighbours for neighbours in valid_neighbours
+                                  if visited_maze[neighbours] is False]
+
+        if not_visited_neighbours:
+
+            next_cell = random.choice(not_visited_neighbours)
+            visited_list.append(next_cell)
+
+            next_x = next_cell[1]
+            next_y = next_cell[0]
+
+            direction = define_direction((y, x), (next_y, next_x))
+
+            create_conexion(maze[y, x], maze[next_y, next_x], direction)
+            visited_maze[next_cell[0], next_cell[1]] = True
+
+        else:
+
+            visited_list.pop()
+
+    return(maze)
+
+
+def not_perfect_maze_solution(maze: npt.NDArray[np.object_],
+                              fourty_two_list: list[tuple[int, int]]
+                              ) -> npt.NDArray[np.object_]:
+
+    height = maze.shape[0]
+    width = maze.shape[1]
+
+    open_corners(maze)
+
+    three_wall_list = three_wall_cells(maze)
+    center_x: int = width // 2
+    center_y: int = height // 2
+
+    if fourty_two_list != []:
+        three_wall_list.remove((center_y - 1, center_x + 2))
+        three_wall_list.remove((center_y + 1, center_x + 2))
+
+    while (three_wall_list) != []:
+        three_wall_position = three_wall_list[0]
+        openable_list = openable_neighbours(maze, three_wall_position,
+                                            fourty_two_list)
+        print(three_wall_position, openable_list)
+        for posible_opening in openable_list:
+            direction = define_direction(three_wall_position,
+                                            posible_opening)
+            create_conexion(maze[three_wall_position],
+                            maze[posible_opening], direction)
+            if check_threexthree_area(maze) is True:
+                create_wall(maze[three_wall_position],
+                            maze[posible_opening], direction)
+
+        three_wall_list.pop(0)
+
+    return maze
+
+
 if __name__ == "__main__":
 
     config = reader()
@@ -442,9 +527,8 @@ if __name__ == "__main__":
     height = valid_dict.height
 
     maze = create_maze(width, height)
-    visited_maze = create_visited_maze(width, height)
 
-    fourty_two_list = create_42(visited_maze)
+    fourty_two_list = create_42(maze)
 
     if valid_dict.entry in fourty_two_list:
         print("Entry can not be in 42 picture")
@@ -462,61 +546,14 @@ if __name__ == "__main__":
 
     output_file = valid_dict.output_file
 
-    visited_maze[initial_y, initial_x] = True
-    visited_list = [(initial_y, initial_x)]
     # hex_maze = create_hex_maze(maze, width, height)
     # print(hex_maze)
 
-    while visited_list:
-
-        y = visited_list[-1][0]
-        x = visited_list[-1][1]
-
-        valid_neighbours = check_valid_neighbours(maze, y, x)
-        not_visited_neighbours = [neighbours for neighbours in valid_neighbours
-                                  if visited_maze[neighbours] is False]
-
-        if not_visited_neighbours:
-            next_cell = random.choice(not_visited_neighbours)
-            visited_list.append(next_cell)
-
-            next_x = next_cell[1]
-            next_y = next_cell[0]
-
-            direction = define_direction((y, x), (next_y, next_x))
-
-            create_conexion(maze[y, x], maze[next_y, next_x], direction)
-            visited_maze[next_cell[0], next_cell[1]] = True
-
-        else:
-            visited_list.pop()
+    perfect_maze_solution(maze, initial_x, initial_y, fourty_two_list)
 
     if valid_dict.perfect is False:
-        open_corners(maze)
 
-        three_wall_list = three_wall_cells(maze)
-        center_x: int = width // 2
-        center_y: int = height // 2
-
-        if fourty_two_list != []:
-            three_wall_list.remove((center_y - 1, center_x + 2))
-            three_wall_list.remove((center_y + 1, center_x + 2))
-
-        while (three_wall_list) != []:
-            three_wall_position = three_wall_list[0]
-            openable_list = openable_neighbours(maze, three_wall_position,
-                                                fourty_two_list)
-            print(three_wall_position, openable_list)
-            for posible_opening in openable_list:
-                direction = define_direction(three_wall_position,
-                                             posible_opening)
-                create_conexion(maze[three_wall_position],
-                                maze[posible_opening], direction)
-                if check_threexthree_area(maze) is True:
-                    create_wall(maze[three_wall_position],
-                                maze[posible_opening], direction)
-
-            three_wall_list.pop(0)
+        not_perfect_maze_solution(maze, fourty_two_list)
 
     hex_maze = create_hex_maze(maze, width, height)
     bit_maze = create_bit_maze(maze, width, height)

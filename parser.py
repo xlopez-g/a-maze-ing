@@ -45,7 +45,7 @@ class Config_Dict(BaseModel):
         return (self)
 
 
-def parser(config: dict[str, typing.Any]) -> dict[str, typing.Any]:
+def parser(config: dict[str, typing.Any]) -> Config_Dict:
 
     try:
         width = int(config["WIDTH"])
