@@ -1,42 +1,10 @@
-import numpy as np
-
-import numpy.typing as npt
-
 import random
-
-from pydantic import BaseModel, Field, model_validator, ValidationError
 
 import sys
 
 from parser import parser, reader
 
-
-class Cell:
-    def __init__(self) -> None:
-        self.north = 1
-        self.east = 1
-        self.south = 1
-        self.west = 1
-
-
-def create_visited_maze(width: int, height: int) -> npt.NDArray[np.bool_]:
-
-    visited_maze = np.empty((height, width), dtype=object)
-
-    for column in range(width):
-        for row in range(height):
-            visited_maze[row, column] = False
-    return visited_maze
-
-
-def create_maze(width: int, height: int) -> npt.NDArray[np.object_]:
-
-    maze = np.empty((height, width), dtype=object)
-
-    for column in range(width):
-        for row in range(height):
-            maze[row, column] = Cell()
-    return maze
+from models import CellMaze, VisitedMaze, BitMaze, HexMaze, Cell
 
 
 def define_direction(pos_init: tuple[int, int],
@@ -82,6 +50,7 @@ def short_direction(pos_init: tuple[int, int],
 
 
 def calculate_hex(cell: Cell) -> str:
+
     result = (cell.north * 1
               + cell.east * 2
               + cell.south * 4
@@ -90,34 +59,34 @@ def calculate_hex(cell: Cell) -> str:
     return format(result, "X")
 
 
-def create_hex_maze(maze: npt.NDArray[np.object_],
+def create_hex_maze(maze: CellMaze,
                     width: int,
                     height: int
-                    ) -> npt.NDArray[np.object_]:
+                    ) -> HexMaze:
 
-    hex_maze = np.empty((height, width), dtype=object)
+    hex_maze = HexMaze(width, height)
 
     for x in range(width):
         for y in range(height):
-            hex_maze[y, x] = calculate_hex(maze[y, x])
+            hex_maze.grid[y, x] = calculate_hex(maze.grid[y, x])
 
     return hex_maze
 
 
-def create_bit_maze(maze: npt.NDArray[np.object_],
+def create_bit_maze(maze: CellMaze,
                     width: int,
                     height: int
-                    ) -> npt.NDArray[np.int_]:
+                    ) -> BitMaze:
 
-    bit_maze = np.empty((height, width), dtype=int)
+    bit_maze = BitMaze(width, height)
 
     for x in range(width):
         for y in range(height):
-            bit_maze[y, x] = (maze[y, x].north * 1
-                              + maze[y, x].east * 10
-                              + maze[y, x].south * 100
-                              + maze[y, x].west * 1000
-                              )
+            bit_maze.grid[y, x] = (maze[y, x].north * 1
+                                   + maze[y, x].east * 10
+                                   + maze[y, x].south * 100
+                                   + maze[y, x].west * 1000
+                                   )
 
     return bit_maze
 
@@ -168,12 +137,12 @@ def create_wall(cell1: Cell,
         return
 
 
-def check_valid_neighbours(maze: npt.NDArray[np.object_],
+def check_valid_neighbours(maze: CellMaze,
                            position: tuple[int, int]
                            ) -> list[tuple[int, int]]:
 
-    height = maze.shape[0]
-    width = maze.shape[1]
+    height = maze.height
+    width = maze.width
 
     y, x = position
 
@@ -198,13 +167,13 @@ def check_valid_neighbours(maze: npt.NDArray[np.object_],
     return neighbour_list
 
 
-def openable_neighbours(maze: npt.NDArray[np.object_],
+def openable_neighbours(maze: CellMaze,
                         position: tuple[int, int],
                         fourty_two_list: list[tuple[int, int]]
                         ) -> list[tuple[int, int]]:
 
-    height = maze.shape[0]
-    width = maze.shape[1]
+    height = maze.height
+    width = maze.width
 
     x = position[1]
     y = position[0]
@@ -234,7 +203,7 @@ def openable_neighbours(maze: npt.NDArray[np.object_],
     return neighbour_list
 
 
-def check_open_neighbours(maze: npt.NDArray[np.object_],
+def check_open_neighbours(maze: CellMaze,
                           y: int,
                           x: int) -> list[tuple[int, int]]:
 
@@ -279,25 +248,25 @@ def reading_the_dict(parents_dict: dict[tuple[int, int], tuple[int, int]],
     return result
 
 
-def finding_the_way(maze: npt.NDArray[np.object_],
+def finding_the_way(maze: CellMaze,
                     init: tuple[int, int],
                     end: tuple[int, int]
                     ) -> str:
 
-    height = maze.shape[0]
-    width = maze.shape[1]
+    height = maze.height
+    width = maze.width
 
-    visited_maze = create_visited_maze(width, height)
+    visited_maze = VisitedMaze(width, height)
 
     qeue = [init]
     parents_dict: dict[tuple[int, int], tuple[int, int]] = {}
 
     while (qeue):
-        visited_maze[qeue[0]] = True
+        visited_maze.grid[qeue[0]] = True
 
         valid_neighbours = check_open_neighbours(maze, qeue[0][0], qeue[0][1])
         not_visited_neighbours = [neighbours for neighbours in valid_neighbours
-                                  if visited_maze[neighbours] is False]
+                                  if visited_maze.grid[neighbours] is False]
 
         for neighbour in not_visited_neighbours:
             parents_dict.update({neighbour: qeue[0]})
@@ -308,18 +277,18 @@ def finding_the_way(maze: npt.NDArray[np.object_],
         qeue.pop(0)
         for member in not_visited_neighbours:
             qeue.append(member)
-            visited_maze[member] = True
+            visited_maze.grid[member] = True
 
     final_path = reading_the_dict(parents_dict, end)
 
     return (final_path)
 
 
-def create_42(visited_maze: npt.NDArray[np.object_]
+def create_42(maze: CellMaze
               ) -> list[tuple[int, int]]:
 
-    height = visited_maze.shape[0]
-    width = visited_maze.shape[1]
+    height = maze.height
+    width = maze.width
 
     if height < 7:
         print("Height not enough for 42 picture")
@@ -330,32 +299,34 @@ def create_42(visited_maze: npt.NDArray[np.object_]
         fourty_two_list = []
 
     else:
-        
+
         x = width // 2
         y = height // 2
 
-        fourty_two_list = [(y - 2, x - 3), (y - 1, x - 3), (y, x - 3), (y, x - 2),
-                           (y, x - 1), (y + 1, x - 1), (y + 2, x - 1),
-                           (y - 2, x + 1), (y - 2, x + 2), (y - 2, x + 3),
-                           (y - 1, x + 3), (y, x + 3), (y, x + 2), (y, x + 1),
-                           (y + 1, x + 1), (y + 2, x + 1), (y + 2, x + 2),
+        fourty_two_list = [(y - 2, x - 3), (y - 1, x - 3), (y, x - 3),
+                           (y, x - 2), (y, x - 1),
+                           (y + 1, x - 1), (y + 2, x - 1),
+                           (y - 2, x + 1), (y - 2, x + 2),
+                           (y - 2, x + 3), (y - 1, x + 3), (y, x + 3),
+                           (y, x + 2), (y, x + 1), (y + 1, x + 1),
+                           (y + 2, x + 1), (y + 2, x + 2),
                            (y + 2, x + 3)
                            ]
 
     return fourty_two_list
 
 
-def three_wall_cells(maze: npt.NDArray[np.object_]
+def three_wall_cells(maze: CellMaze
                      ) -> list[tuple[int, int]]:
 
     three_wall_list = []
 
-    height = maze.shape[0]
-    width = maze.shape[1]
+    height = maze.height
+    width = maze.width
 
     for x in range(width):
         for y in range(height):
-            cell = maze[y, x]
+            cell = maze.grid[y, x]
             if (cell.north + cell.east + cell.south + cell.west) == 3:
                 three_wall_list.append((y, x))
 
@@ -364,35 +335,47 @@ def three_wall_cells(maze: npt.NDArray[np.object_]
     return (three_wall_list)
 
 
-def open_corners(maze: npt.NDArray[np.object_]) -> None:
+def open_corners(maze: CellMaze) -> None:
 
-    height = maze.shape[0]
-    width = maze.shape[1]
+    height = maze.height
+    width = maze.width
 
-    if maze[0, 0].south != 0:
-        create_conexion(maze[0, 0], maze[1, 0], "south")
-    if maze[0, 0].west != 0:
-        create_conexion(maze[0, 0], maze[0, 1], "east")
+    if maze.grid[0, 0].south != 0:
+        create_conexion(maze.grid[0, 0], maze.grid[1, 0], "south")
 
-    if maze[height - 1, 0].north != 0:
-        create_conexion(maze[height - 1, 0], maze[height - 2, 0], "north")
-    if maze[height - 1, 0].west != 0:
-        create_conexion(maze[height - 1, 0], maze[height - 1, 1], "east")
+    if maze.grid[0, 0].west != 0:
+        create_conexion(maze.grid[0, 0], maze.grid[0, 1], "east")
 
-    if maze[0, width - 1].south != 0:
-        create_conexion(maze[0, width - 1], maze[1, width - 1], "south")
-    if maze[0, width - 1].east != 0:
-        create_conexion(maze[0, width - 1], maze[0, width - 2], "west")
+    if maze.grid[height - 1, 0].north != 0:
+        cell = maze.grid[height - 1, 0]
+        cell_next = maze.grid[height - 2, 0]
+        create_conexion(cell, cell_next, "north")
 
-    if maze[height - 1, width - 1].north != 0:
-        create_conexion(maze[height - 2, width - 1],
-                        maze[height - 1, width - 1], "south")
-    if maze[height - 1, width - 1].east != 0:
-        create_conexion(maze[height - 1, width - 1],
-                        maze[height - 1, width - 2], "west")
+    if maze.grid[height - 1, 0].west != 0:
+        cell = maze.grid[height - 1, 0]
+        cell_next = maze.grid[height - 1, 1]
+        create_conexion(cell, cell_next, "east")
+
+    if maze.grid[0, width - 1].south != 0:
+        cell = maze.grid[0, width - 1]
+        cell_next = maze.grid[1, width - 1]
+        create_conexion(cell, cell_next, "south")
+
+    if maze.grid[0, width - 1].east != 0:
+        cell = maze.grid[0, width - 1]
+        cell_next = maze.grid[0, width - 2]
+        create_conexion(cell, cell_next, "west")
+
+    if maze.grid[height - 1, width - 1].north != 0:
+        create_conexion(maze.grid[height - 2, width - 1],
+                        maze.grid[height - 1, width - 1], "south")
+
+    if maze.grid[height - 1, width - 1].east != 0:
+        create_conexion(maze.grid[height - 1, width - 1],
+                        maze.grid[height - 1, width - 2], "west")
 
 
-def check_zero_around(maze: npt.NDArray[np.object_],
+def check_zero_around(maze: CellMaze,
                       position: tuple[int, int]
                       ) -> bool:
 
@@ -401,29 +384,30 @@ def check_zero_around(maze: npt.NDArray[np.object_],
 
     result = True
 
-    if maze[y - 1, x - 1].south != 0 or maze[y - 1, x - 1].east != 0:
+    if maze.grid[y - 1, x - 1].south != 0 or maze.grid[y - 1, x - 1].east != 0:
         return (False)
 
-    if maze[y + 1, x - 1].north != 0 or maze[y + 1, x - 1].east != 0:
+    if maze.grid[y + 1, x - 1].north != 0 or maze.grid[y + 1, x - 1].east != 0:
         return (False)
 
-    if maze[y - 1, x + 1].south != 0 or maze[y - 1, x + 1].west != 0:
+    if maze.grid[y - 1, x + 1].south != 0 or maze.grid[y - 1, x + 1].west != 0:
         return (False)
 
-    if maze[y + 1, x + 1].north != 0 or maze[y + 1, x + 1].west != 0:
+    if maze.grid[y + 1, x + 1].north != 0 or maze.grid[y + 1, x + 1].west != 0:
         return (False)
 
     return (result)
 
 
-def check_threexthree_area(maze: npt.NDArray[np.object_]) -> bool:
+def check_threexthree_area(maze: CellMaze) -> bool:
+
     result = False
-    height = maze.shape[0]
-    width = maze.shape[1]
+    height = maze.height
+    width = maze.width
 
     for x in range(1, width - 1):
         for y in range(1, height - 1):
-            cell = maze[y, x]
+            cell = maze.grid[y, x]
             cell_sum = cell.north + cell.east + cell.south + cell.west
             if cell_sum == 0:
                 if check_zero_around(maze, (y, x)):
@@ -432,22 +416,22 @@ def check_threexthree_area(maze: npt.NDArray[np.object_]) -> bool:
     return (result)
 
 
-def perfect_maze_solution(maze: npt.NDArray[np.object_],
+def perfect_maze_solution(maze: CellMaze,
                           initial_x: int,
                           initial_y: int,
                           fourty_two_list: list[tuple[int, int]]
-                          ) -> npt.NDArray[np.object_]:
+                          ) -> CellMaze:
 
-    height = maze.shape[0]
-    width = maze.shape[1]
-    
-    visited_maze = create_visited_maze(width, height)
+    height = maze.height
+    width = maze.width
+
+    visited_maze = VisitedMaze(width, height)
     visited_list = [(initial_y, initial_x)]
 
-    visited_maze[initial_y, initial_x] = True
+    visited_maze.grid[initial_y, initial_x] = True
 
     for y_coord, xcoord in fourty_two_list:
-        visited_maze[y_coord, xcoord] = True
+        visited_maze.grid[y_coord, xcoord] = True
 
     while visited_list:
 
@@ -457,7 +441,7 @@ def perfect_maze_solution(maze: npt.NDArray[np.object_],
         valid_neighbours = check_valid_neighbours(maze, (y, x))
 
         not_visited_neighbours = [neighbours for neighbours in valid_neighbours
-                                  if visited_maze[neighbours] is False]
+                                  if visited_maze.grid[neighbours] is False]
 
         if not_visited_neighbours:
 
@@ -469,22 +453,24 @@ def perfect_maze_solution(maze: npt.NDArray[np.object_],
 
             direction = define_direction((y, x), (next_y, next_x))
 
-            create_conexion(maze[y, x], maze[next_y, next_x], direction)
-            visited_maze[next_cell[0], next_cell[1]] = True
+            cell = maze.grid[y, x]
+            cell_next = maze.grid[next_y, next_x]
+            create_conexion(cell, cell_next, direction)
+            visited_maze.grid[next_cell[0], next_cell[1]] = True
 
         else:
 
             visited_list.pop()
 
-    return(maze)
+    return (maze)
 
 
-def not_perfect_maze_solution(maze: npt.NDArray[np.object_],
+def not_perfect_maze_solution(maze: CellMaze,
                               fourty_two_list: list[tuple[int, int]]
-                              ) -> npt.NDArray[np.object_]:
+                              ) -> CellMaze:
 
-    height = maze.shape[0]
-    width = maze.shape[1]
+    height = maze.height
+    width = maze.width
 
     open_corners(maze)
 
@@ -503,12 +489,12 @@ def not_perfect_maze_solution(maze: npt.NDArray[np.object_],
         print(three_wall_position, openable_list)
         for posible_opening in openable_list:
             direction = define_direction(three_wall_position,
-                                            posible_opening)
-            create_conexion(maze[three_wall_position],
-                            maze[posible_opening], direction)
+                                         posible_opening)
+            create_conexion(maze.grid[three_wall_position],
+                            maze.grid[posible_opening], direction)
             if check_threexthree_area(maze) is True:
-                create_wall(maze[three_wall_position],
-                            maze[posible_opening], direction)
+                create_wall(maze.grid[three_wall_position],
+                            maze.grid[posible_opening], direction)
 
         three_wall_list.pop(0)
 
@@ -526,7 +512,7 @@ if __name__ == "__main__":
     width = valid_dict.width
     height = valid_dict.height
 
-    maze = create_maze(width, height)
+    maze = CellMaze(width, height)
 
     fourty_two_list = create_42(maze)
 

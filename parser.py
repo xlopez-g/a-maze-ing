@@ -97,7 +97,7 @@ def parser(config: dict[str, typing.Any]) -> Config_Dict:
     if "SEED" in config:
         try:
             seed: int | None = int(config["SEED"])
-    
+
         except ValueError:
             print("seed must be None or integer")
             sys.exit(1)
@@ -114,7 +114,7 @@ def parser(config: dict[str, typing.Any]) -> Config_Dict:
                                  perfect=perfect,
                                  seed=seed
                                  )
-    
+
         return valid_dict
 
     except ValidationError as e:
@@ -126,7 +126,6 @@ def reader() -> dict[str, typing.Any]:
 
     config = {}
 
-
     with open("config.txt", "r") as open_config:
         for line in open_config:
             line = line.strip()
@@ -136,5 +135,5 @@ def reader() -> dict[str, typing.Any]:
 
             key, value = line.split("=", 1)
             config[key.strip()] = value.strip()
-    
+
     return config
