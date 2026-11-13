@@ -6,6 +6,8 @@ from parser import parser, reader
 
 from models import CellMaze, VisitedMaze, BitMaze, HexMaze, Cell
 
+from printer import printer
+
 
 def define_direction(pos_init: tuple[int, int],
                      pos_next: tuple[int, int]) -> str:
@@ -548,10 +550,16 @@ if __name__ == "__main__":
     print("final path:", final_path)
 
     with open(output_file, "w") as archive:
+        hex_printer: str = ""
         for row in hex_maze:
-            print("".join(row))
+            hex_printer += ("".join(row))
+            hex_printer += "\n"
             archive.write("".join(row) + "\n")
         archive.write("\n")
         archive.write(f"{initial_x},{initial_y}\n")
         archive.write(f"{end_position[1]},{end_position[0]}\n")
         archive.write(f"{final_path}\n")
+
+    print(f"\n{hex_printer}")
+    print()
+    printer(hex_maze, initial_position, end_position)
