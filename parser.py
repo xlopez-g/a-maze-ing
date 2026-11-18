@@ -157,6 +157,6 @@ def reader(input_file: str) -> dict[str, typing.Any]:
             not_allowed_keys = config.keys() - allowed_keys
 
             if not_allowed_keys:
-                raise ValueError(f"Unknown key: {','.join(not_allowed_keys)}"))
+                raise ValueError(f"Unknown key: {','.join(not_allowed_keys)}")
 
     return config
