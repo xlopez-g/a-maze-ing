@@ -423,11 +423,14 @@ def check_threexthree_area(maze: CellMaze) -> bool:
 def perfect_maze_solution(maze: CellMaze,
                           initial_x: int,
                           initial_y: int,
-                          fourty_two_list: list[tuple[int, int]]
+                          fourty_two_list: list[tuple[int, int]],
+                          seed: int
                           ) -> CellMaze:
 
     height = maze.height
     width = maze.width
+
+    rng = random.Random(seed)
 
     visited_maze = VisitedMaze(width, height)
     visited_list = [(initial_y, initial_x)]
@@ -449,7 +452,7 @@ def perfect_maze_solution(maze: CellMaze,
 
         if not_visited_neighbours:
 
-            next_cell = random.choice(not_visited_neighbours)
+            next_cell = rng.choice(not_visited_neighbours)
             visited_list.append(next_cell)
 
             next_x = next_cell[1]
@@ -559,7 +562,9 @@ if __name__ == "__main__":
     # hex_maze = create_hex_maze(maze, width, height)
     # print(hex_maze)
 
-    perfect_maze_solution(maze, initial_x, initial_y, fourty_two_list)
+    seed = valid_dict.seed
+
+    perfect_maze_solution(maze, initial_x, initial_y, fourty_two_list, seed)
 
     if valid_dict.perfect is False:
 
