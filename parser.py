@@ -4,8 +4,6 @@ import sys
 
 from pydantic import BaseModel, Field, model_validator, ValidationError
 
-from typing import Optional
-
 
 class Config_Dict(BaseModel):
     width: int = Field(ge=3, le=100)
@@ -14,7 +12,7 @@ class Config_Dict(BaseModel):
     exit_pos: tuple[int, int]
     output_file: str = Field(max_length=100)
     perfect: bool
-    seed: Optional[int] = None
+    seed: int | None = Field(default=None, ge=0)
 
     @model_validator(mode='after')
     def parameter_checker(self) -> 'Config_Dict':
@@ -36,7 +34,7 @@ class Config_Dict(BaseModel):
         if self.output_file == "config.txt":
             raise ValueError("Do not overwrite config.txt")
 
-        if not self.output_file.endswith("txt"):
+        if not self.output_file.endswith(".txt"):
             raise ValueError("Output file must end by .txt")
 
         if self.output_file.startswith("."):
@@ -47,16 +45,27 @@ class Config_Dict(BaseModel):
 
 def parser(config: dict[str, typing.Any]) -> Config_Dict:
 
+    required_keys = {"WIDTH", "HEIGHT", "ENTRY", "EXIT",
+                     "OUTPUT_FILE", "PERFECT"} 
+    
+    missing_keys = required_keys - config.keys()
+
+    if missing_keys:
+        raise ValueError(f"Missing configuration keys: {', '.join(missing_keys)}")
+
     try:
         width = int(config["WIDTH"])
         height = int(config["HEIGHT"])
 
     except ValueError:
-        print("width and height must be an integer")
-        sys.exit(1)
+        raise ValueError("Width and height must be an integer")
 
     entry = config["ENTRY"]
     entry_list = entry.split(",")
+
+    if len(entry_list) != 2:
+        raise ValueError("ENTRY must contain exactly two coordinates (x,y)")
+
     initial_position_str = (entry_list[1], entry_list[0])
 
     try:
@@ -64,13 +73,16 @@ def parser(config: dict[str, typing.Any]) -> Config_Dict:
         initial_x = int(initial_position_str[1])
 
     except ValueError:
-        print("initial position must be formed by integers")
-        sys.exit(1)
+        raise ValueError("Initial position must be formed by integers")
 
     initial_position = (initial_y, initial_x)
 
     exit_pos = config["EXIT"]
     exit_list = exit_pos.split(",")
+
+    if len(exit_list) != 2:
+        raise ValueError("EXIT must contain exactly two coordinates (x,y)")
+
     end_position_str = (exit_list[1], exit_list[0])
 
     try:
@@ -78,8 +90,7 @@ def parser(config: dict[str, typing.Any]) -> Config_Dict:
         end_x = int(end_position_str[1])
 
     except ValueError:
-        print("End position must be formed by integers")
-        sys.exit(1)
+        raise ValueError("End position must be formed by integers")
 
     end_position = (end_y, end_x)
 
@@ -94,46 +105,58 @@ def parser(config: dict[str, typing.Any]) -> Config_Dict:
     else:
         raise ValueError("Invalid input: perfect must be True or False")
 
-    if "SEED" in config:
+    if "SEED" in config and config["SEED"] != "None":
         try:
             seed: int | None = int(config["SEED"])
 
         except ValueError:
-            print("seed must be None or integer")
-            sys.exit(1)
+            raise ValueError("Seed must be None or integer")
 
     else:
         seed = None
 
-    try:
-        valid_dict = Config_Dict(width=width,
-                                 height=height,
-                                 entry=initial_position,
-                                 exit_pos=end_position,
-                                 output_file=output_file,
-                                 perfect=perfect,
-                                 seed=seed
-                                 )
+    valid_dict = Config_Dict(width=width,
+                             height=height,
+                             entry=initial_position,
+                             exit_pos=end_position,
+                             output_file=output_file,
+                             perfect=perfect,
+                             seed=seed
+                             )
 
-        return valid_dict
-
-    except ValidationError as e:
-        print(e.errors()[0]["msg"])
-        sys.exit(1)
+    return valid_dict
 
 
-def reader() -> dict[str, typing.Any]:
+def reader(input_file: str) -> dict[str, typing.Any]:
 
     config = {}
 
-    with open("config.txt", "r") as open_config:
-        for line in open_config:
+    with open(input_file, "r") as open_config:
+        for line_number, line in enumerate(open_config, 1):
             line = line.strip()
 
-            if not line or line.startswith("#") or "=" not in line:
+            if not line or line.startswith("#"):
                 continue
 
+            if "=" not in line:
+                raise ValueError(f"Invalid syntax at line {line_number}")
+
             key, value = line.split("=", 1)
-            config[key.strip()] = value.strip()
+            
+            key = key.strip()
+            value = value.strip()
+
+            if key in config:
+                raise ValueError(f"Duplicate configuration key: {key}")
+                
+            config[key] = value
+
+            allowed_keys = {"WIDTH", "HEIGHT", "ENTRY", "EXIT",
+                            "OUTPUT_FILE", "PERFECT", "SEED"}
+
+            not_allowed_keys = config.keys() - allowed_keys
+
+            if not_allowed_keys:
+                raise ValueError(f"Unknown key: {','.join(not_allowed_keys)}"))
 
     return config

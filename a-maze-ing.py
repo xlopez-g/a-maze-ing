@@ -8,6 +8,8 @@ from models import CellMaze, VisitedMaze, BitMaze, HexMaze, Cell
 
 from printer import printer
 
+from pydantic import ValidationError
+
 
 def define_direction(pos_init: tuple[int, int],
                      pos_next: tuple[int, int]) -> str:
@@ -505,9 +507,29 @@ def not_perfect_maze_solution(maze: CellMaze,
 
 if __name__ == "__main__":
 
-    config = reader()
+    if len(sys.argv) != 2:
+        print("Usage: python3 a_maze_ing.py config.txt")
+        sys.exit(1)
 
-    valid_dict = parser(config)
+    try:
+        config = reader(sys.argv[1])
+        valid_dict = parser(config)
+
+    except ValidationError as e:
+        print(e.errors()[0]["msg"])
+        sys.exit(1)
+
+    except FileNotFoundError:
+        print(f"Error: Configuration file '{sys.argv[1]}' not found")
+        sys.exit(1)
+
+    except PermissionError:
+        print(f"Error: Cannot read '{sys.argv[1]}'")
+        sys.exit(1)
+
+    except (ValueError, KeyError, IndexError) as e:
+        print("Error: ", e)
+        sys.exit(1)
 
     print(valid_dict)
 
