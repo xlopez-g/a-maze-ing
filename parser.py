@@ -146,6 +146,9 @@ def reader(input_file: str) -> dict[str, typing.Any]:
             key = key.strip()
             value = value.strip()
 
+            if not key or not value:
+                raise ValueError(f"Empty key or value at line {line_number}")
+
             if key in config:
                 raise ValueError(f"Duplicate configuration key: {key}")
                 
