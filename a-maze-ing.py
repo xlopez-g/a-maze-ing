@@ -225,6 +225,7 @@ def check_open_neighbours(maze: CellMaze,
 
 
 def reading_the_dict(parents_dict: dict[tuple[int, int], tuple[int, int]],
+                     initial_position: tuple[int, int],
                      end_position: tuple[int, int]
                      ) -> str:
 
@@ -232,7 +233,7 @@ def reading_the_dict(parents_dict: dict[tuple[int, int], tuple[int, int]],
 
     step = end_position
 
-    while step != (0, 0):
+    while step != initial_position:
         parent = parents_dict[step]
     #    print(temp)
         path.append(parent)
@@ -283,7 +284,7 @@ def finding_the_way(maze: CellMaze,
             qeue.append(member)
             visited_maze.grid[member] = True
 
-    final_path = reading_the_dict(parents_dict, end)
+    final_path = reading_the_dict(parents_dict, init, end)
 
     return (final_path)
 

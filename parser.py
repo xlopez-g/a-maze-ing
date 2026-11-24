@@ -69,8 +69,8 @@ def parser(config: dict[str, typing.Any]) -> Config_Dict:
     initial_position_str = (entry_list[1], entry_list[0])
 
     try:
-        initial_y = int(initial_position_str[0])
-        initial_x = int(initial_position_str[1])
+        initial_x = int(initial_position_str[0])
+        initial_y = int(initial_position_str[1])
 
     except ValueError:
         raise ValueError("Initial position must be formed by integers")
