@@ -16,16 +16,16 @@ class Config_Dict(BaseModel):
 
     @model_validator(mode='after')
     def parameter_checker(self) -> 'Config_Dict':
-        if self.entry[0] >= self.height or self.entry[0] < 0:
+        if self.entry[1] >= self.height or self.entry[0] < 0:
             raise ValueError("Entry parameter out of range")
 
-        if self.entry[1] >= self.width or self.entry[1] < 0:
+        if self.entry[0] >= self.width or self.entry[1] < 0:
             raise ValueError("Entry parameter out of range")
 
-        if self.exit_pos[0] >= self.height or self.exit_pos[0] < 0:
+        if self.exit_pos[1] >= self.height or self.exit_pos[1] < 0:
             raise ValueError("Exit parameter out of range")
 
-        if self.exit_pos[1] >= self.width or self.exit_pos[1] < 0:
+        if self.exit_pos[0] >= self.width or self.exit_pos[0] < 0:
             raise ValueError("Exit parameter out of range")
 
         if self.entry == self.exit_pos:
@@ -66,7 +66,7 @@ def parser(config: dict[str, typing.Any]) -> Config_Dict:
     if len(entry_list) != 2:
         raise ValueError("ENTRY must contain exactly two coordinates (x,y)")
 
-    initial_position_str = (entry_list[1], entry_list[0])
+    initial_position_str = (entry_list[0], entry_list[1])
 
     try:
         initial_x = int(initial_position_str[0])
@@ -75,7 +75,7 @@ def parser(config: dict[str, typing.Any]) -> Config_Dict:
     except ValueError:
         raise ValueError("Initial position must be formed by integers")
 
-    initial_position = (initial_y, initial_x)
+    initial_position = (initial_x, initial_y)
 
     exit_pos = config["EXIT"]
     exit_list = exit_pos.split(",")
@@ -83,16 +83,16 @@ def parser(config: dict[str, typing.Any]) -> Config_Dict:
     if len(exit_list) != 2:
         raise ValueError("EXIT must contain exactly two coordinates (x,y)")
 
-    end_position_str = (exit_list[1], exit_list[0])
+    end_position_str = (exit_list[0], exit_list[1])
 
     try:
-        end_y = int(end_position_str[0])
-        end_x = int(end_position_str[1])
+        end_x = int(end_position_str[0])
+        end_y = int(end_position_str[1])
 
     except ValueError:
         raise ValueError("End position must be formed by integers")
 
-    end_position = (end_y, end_x)
+    end_position = (end_x, end_y)
 
     output_file = config["OUTPUT_FILE"]
 

@@ -5,7 +5,7 @@ PIP 		:= $(VENV)/bin/pip
 FLAKE8		:= $(VENV)/bin/flake8
 MYPY		:= $(VENV)/bin/mypy
 
-MAP			?=example.txt
+CONFIG			?=config.txt
 SRCS		:=$(wildcard *.py)
 
 .PHONY: install run debug clean lint lint_strict
@@ -15,10 +15,10 @@ install:
 		$(PIP) install -r requirements.txt
 
 run:
-		$(PYTHON) main.py $(MAP)
+		$(PYTHON) a-maze-ing.py $(CONFIG)
 
 debug:
-		$(PYTHON) -m pdb main.py
+		$(PYTHON) -m pdb a-maze-ing.py $(CONFIG)
 
 clean:
 		find . -type d -name "__pycache__" -exec rm -rf {} +
