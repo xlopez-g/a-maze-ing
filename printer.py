@@ -1,137 +1,46 @@
+import numpy as np
 from models import HexMaze, PrintMaze, COLORS
 
-import random
+def print_box(matrix: np.ndarray) -> None:
+    height, width = matrix.shape
+    for yindex in range(height):#imprime cuadrado a cuadrado incluyendo los bordes
+        for xindex in range(width):
+            print(matrix[yindex, xindex], end="")
+        print("")
 
+
+def open_cells(matrix: np.ndarray) -> None:
+    height, width = matrix.shape
+    for yindex in range(1, height, 2):#solo los impares para localizar las celdas y no las paredes
+        for xindex in range(1, width, 2):
+            matrix[yindex, xindex] = "  "
+
+
+def open_passages(matrix: np.ndarray, hex_maze: HexMaze) -> None:
+    width = hex_maze.width
+    height = hex_maze.height
+    wall_height, wall_width = matrix.shape
+    for yindex in range(height):
+        for xindex in range(width):
+            cells= int(hex_maze[yindex, xindex], 16)
+            print(cells, end="")
+        print("")
+            
 
 def printer(hex_maze: HexMaze,
-            initial_position: tuple[int, int],
-            end_position: tuple[int, int]):
+            entry_point: tuple[int, int],
+            exit_point: tuple[int, int]):
 
-    simple_square = "\u2588"
+    simple_square = "██"
 
-    width = hex_maze.width 
-    height = hex_maze.height
+    #altura y anchura real para poder representar en la terminal junto al borde exterior
+    width = hex_maze.width * 2 + 1
+    height = hex_maze.height * 2 + 1
 
-    Nx = width * 2 + 1
-    Ny = height * 2 + 1
+    matrix = np.full((height, width), simple_square)
 
-    print_maze = PrintMaze(Nx, Ny)
-
-
-    for x in range(0, width):
-        for y in range(height):
-            print_maze.grid[y * 2 + 1, x * 2 + 1] = " "
+    open_cells(matrix)
+    print_box(matrix)
+    open_passages(matrix, hex_maze)
 
     
-    for x in range(0, width):
-        for y in range(height):
-            if hex_maze.grid[y, x] in ("0", "1", "4", "5", "8", "9", "D", "C"):
-                print_maze.grid[y * 2 + 1, x * 2 + 2] = " "
-            if hex_maze.grid[y, x] in ("0", "1", "2", "3", "8", "9", "A", "B"):
-                print_maze.grid[y * 2 + 2, x * 2 + 1] = " "
-      #      if hex_maze.grid[y, x] in ("C", "A", "6", "E"):
-       #         print_maze.grid[y * 2, x * 2 + 1] = " "
-        #    if hex_maze.grid[y, x] in ("5", "3", "7", "6"):
-         #       print_maze.grid[y * 2 + 1, x * 2] = " "
-    
-    
-    grid = print_maze.grid
-    for x in range(0, Nx, 2):
-        for y in range(0, Ny, 2):
-            
-            up = grid[y - 1, x] if y > 0 else " "
-            down = grid[y + 1, x] if y < Ny - 1 else " "
-            left = grid[y, x - 1] if x > 0 else " "
-            right = grid[y, x + 1] if x < Nx - 1 else " "
-
-            if (up == "┃"
-                and down == "┃"
-                and left == "━"
-                and right == "━"):
-                grid[y, x] = "╋"
-
-            elif (up == " "
-                  and down == "┃"
-                  and left == "━"
-                  and right == "━"):
-                grid[y, x] = "┳"
-
-            elif (up == "┃"
-                  and down == " "
-                  and left == "━"
-                  and right == "━"):
-                grid[y, x] = "┻"
-
-            elif (up == "┃"
-                  and down == "┃"
-                  and left == " "
-                  and right == "━"):
-                grid[y, x] = "┣"
-
-            elif (up == "┃"
-                  and down == "┃"
-                  and left == "━"
-                  and right == " "):
-                grid[y, x] = "┫"
-
-            elif (up == "┃"
-                  and down == " "
-                  and left == "━"
-                  and right == " "):
-                grid[y, x] = "┛"
-
-            elif (up == "┃"
-                  and down == " "
-                  and left == " "
-                  and right == "━"):
-                grid[y, x] = "┗"
-
-            elif (up == " "
-                  and down == "┃"
-                  and left == " "
-                  and right == "━"):
-                grid[y, x] = "┏"
-
-            elif (up == " "
-                  and down == "┃"
-                  and left == "━"
-                  and right == " "):
-                grid[y, x] = "┓"
-
-            elif (up == "┃"
-                  and down == "┃"
-                  and left == " "
-                  and right == " "):
-                grid[y, x] = "┃"
-
-            elif (up == " "
-                  and down == " "
-                  and left == "━"
-                  and right == "━"):
-                grid[y, x] = "━"
-   
-    maze_printer = ""
-    for row in print_maze:
-        maze_printer += "".join(row)
-        maze_printer += "\n"
-
-    color = random.choice(list(COLORS))
-
-    print(color.value, maze_printer, COLORS.reset.value, sep="")
-
-    '''
-    for y in range(0, Ny):
-        if y % 2 == 0:
-            for x in range(0, Nx):
-                if x % 2 == 0 or y == 0:
-                    print(simple_square, end="")
-                else:
-                    print(" ", end="")
-            print()
-        else:
-#            print(simple_square, end=""):
- #           if hex_maze.grid[y, x] in ("9", "C", "5", "D")
-  #              print(derecha)
-            print(simple_square)
-
-    '''
