@@ -8,7 +8,7 @@ MYPY		:= $(VENV)/bin/mypy
 CONFIG			?=config.txt
 SRCS		:=$(wildcard *.py)
 
-.PHONY: install run debug clean lint lint_strict
+.PHONY: install run debug clean lint lint-strict
 
 install:
 		@test -d $(PYTHON) || $(PYTHON_SYS) -m venv $(VENV)
@@ -28,6 +28,6 @@ lint:
 		$(FLAKE8) --exclude=$(VENV) .
 		$(MYPY) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs --exclude=$(VENV) .
 
-lint_strict:
+lint-strict:
 		$(FLAKE8) --exclude=$(VENV) .
 		$(MYPY) --exclude=$(VENV) . --strict

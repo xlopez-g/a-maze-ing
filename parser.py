@@ -1,8 +1,6 @@
 import typing
 
-import sys
-
-from pydantic import BaseModel, Field, model_validator, ValidationError
+from pydantic import BaseModel, Field, model_validator
 
 
 class Config_Dict(BaseModel):
@@ -46,12 +44,13 @@ class Config_Dict(BaseModel):
 def parser(config: dict[str, typing.Any]) -> Config_Dict:
 
     required_keys = {"WIDTH", "HEIGHT", "ENTRY", "EXIT",
-                     "OUTPUT_FILE", "PERFECT"} 
-    
+                     "OUTPUT_FILE", "PERFECT"}
+
     missing_keys = required_keys - config.keys()
 
     if missing_keys:
-        raise ValueError(f"Missing configuration keys: {', '.join(missing_keys)}")
+        error = f"Missing configuration keys: {', '.join(missing_keys)}"
+        raise ValueError(error)
 
     try:
         width = int(config["WIDTH"])
@@ -142,7 +141,7 @@ def reader(input_file: str) -> dict[str, typing.Any]:
                 raise ValueError(f"Invalid syntax at line {line_number}")
 
             key, value = line.split("=", 1)
-            
+
             key = key.strip()
             value = value.strip()
 
@@ -151,7 +150,7 @@ def reader(input_file: str) -> dict[str, typing.Any]:
 
             if key in config:
                 raise ValueError(f"Duplicate configuration key: {key}")
-                
+
             config[key] = value
 
             allowed_keys = {"WIDTH", "HEIGHT", "ENTRY", "EXIT",

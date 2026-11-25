@@ -277,7 +277,9 @@ def finding_the_way(maze: CellMaze,
     while (queue):
         visited_maze.grid[queue[0]] = True
 
-        valid_neighbours = check_open_neighbours(maze, queue[0][0], queue[0][1])
+        valid_neighbours = check_open_neighbours(maze,
+                                                 queue[0][0],
+                                                 queue[0][1])
         not_visited_neighbours = [neighbours for neighbours in valid_neighbours
                                   if visited_maze.grid[neighbours] is False]
 
@@ -317,14 +319,14 @@ def create_42(maze: CellMaze
         y = height // 2
 
         forty_two_list = [(y - 2, x - 3), (y - 1, x - 3), (y, x - 3),
-                           (y, x - 2), (y, x - 1),
-                           (y + 1, x - 1), (y + 2, x - 1),
-                           (y - 2, x + 1), (y - 2, x + 2),
-                           (y - 2, x + 3), (y - 1, x + 3), (y, x + 3),
-                           (y, x + 2), (y, x + 1), (y + 1, x + 1),
-                           (y + 2, x + 1), (y + 2, x + 2),
-                           (y + 2, x + 3)
-                           ]
+                          (y, x - 2), (y, x - 1),
+                          (y + 1, x - 1), (y + 2, x - 1),
+                          (y - 2, x + 1), (y - 2, x + 2),
+                          (y - 2, x + 3), (y - 1, x + 3), (y, x + 3),
+                          (y, x + 2), (y, x + 1), (y + 1, x + 1),
+                          (y + 2, x + 1), (y + 2, x + 2),
+                          (y + 2, x + 3)
+                          ]
 
     return forty_two_list
 
@@ -354,38 +356,49 @@ def open_corners(maze: CellMaze) -> None:
     width = maze.width
 
     if maze.grid[0, 0].south != 0:
-        create_conexion(maze.grid[0, 0], maze.grid[1, 0], "south")
+        direction = define_direction((0, 0), (1, 0))
+        create_conexion(maze.grid[0, 0], maze.grid[1, 0], direction)
 
     if maze.grid[0, 0].east != 0:
-        create_conexion(maze.grid[0, 0], maze.grid[0, 1], "west")
+        direction = define_direction((0, 0), (0, 1))
+        create_conexion(maze.grid[0, 0], maze.grid[0, 1], direction)
 
     if maze.grid[height - 1, 0].north != 0:
         cell = maze.grid[height - 1, 0]
         cell_next = maze.grid[height - 2, 0]
-        create_conexion(cell, cell_next, "north")
+        direction = define_direction((height - 1, 0), (height - 2, 0))
+        create_conexion(cell, cell_next, direction)
 
     if maze.grid[height - 1, 0].east != 0:
         cell = maze.grid[height - 1, 0]
         cell_next = maze.grid[height - 1, 1]
-        create_conexion(cell, cell_next, "west")
+        direction = define_direction((height - 1, 0), (height - 1, 1))
+        create_conexion(cell, cell_next, direction)
 
     if maze.grid[0, width - 1].south != 0:
         cell = maze.grid[0, width - 1]
         cell_next = maze.grid[1, width - 1]
-        create_conexion(cell, cell_next, "south")
+        direction = define_direction((0, width - 1), (1, width - 1))
+        create_conexion(cell, cell_next, direction)
 
     if maze.grid[0, width - 1].west != 0:
         cell = maze.grid[0, width - 1]
         cell_next = maze.grid[0, width - 2]
-        create_conexion(cell, cell_next, "west")
+        direction = define_direction((0, width - 1), (0, width - 2))
+        create_conexion(cell, cell_next, direction)
 
-    if maze.grid[height - 1, width - 1].north != 0:
-        create_conexion(maze.grid[height - 2, width - 1],
-                        maze.grid[height - 1, width - 1], "south")
+    border = (height - 1, width - 1)
+    if maze.grid[border].north != 0:
+        cell = maze.grid[height - 2, width - 1]
+        cell_next = maze.grid[border]
+        direction = define_direction((height - 2, width - 1), border)
+        create_conexion(cell, cell_next, direction)
 
-    if maze.grid[height - 1, width - 1].west != 0:
-        create_conexion(maze.grid[height - 1, width - 1],
-                        maze.grid[height - 1, width - 2], "west")
+    if maze.grid[border].west != 0:
+        cell = maze.grid[border]
+        cell_next = maze.grid[height - 1, width - 2]
+        direction = define_direction(border, (height - 1, width - 2))
+        create_conexion(cell, cell_next, direction)
 
 
 def check_zero_around(maze: CellMaze,
@@ -430,9 +443,9 @@ def check_threexthree_area(maze: CellMaze) -> bool:
 
 
 def perfect_maze_solution(maze: CellMaze,
-                          initial_position: tuple[int, int], 
+                          initial_position: tuple[int, int],
                           forty_two_list: list[tuple[int, int]],
-                          seed: int
+                          seed: int | None
                           ) -> CellMaze:
 
     height = maze.height
