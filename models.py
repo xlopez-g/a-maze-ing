@@ -74,15 +74,13 @@ class PrintMaze(Maze):
 
         self.grid = np.full((height, width), " ", dtype=object)
 
-        simple_square = "\u2588"
-
         for x in range(width):
             for y in range(height):
                 if y % 2 != 0 and x % 2 != 0:
                     if x < width - 1:
                         self.grid[y, x + 1] = "┃"
                     if y < height - 1:
-                       self.grid[y + 1, x] = "━"
+                        self.grid[y + 1, x] = "━"
                 self.grid[y, 0] = "┃"
                 self.grid[0, x] = "━"
                 self.grid[y, width - 1] = "┃"
@@ -92,6 +90,7 @@ class PrintMaze(Maze):
         self.grid[height - 1, 0] = "┗"
         self.grid[0, width - 1] = "┓"
         self.grid[height - 1, width - 1] = "┛"
+
 
 class COLORS(Enum):
     red = "\033[31m"
