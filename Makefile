@@ -15,7 +15,7 @@ install:
 		$(PIP) install -r requirements.txt
 
 run:
-		$(PYTHON) a-maze-ing.py $(CONFIG)
+		$(PYTHON) a_maze_ing.py $(CONFIG)
 
 debug:
 		$(PYTHON) -m pdb a-maze-ing.py $(CONFIG)
