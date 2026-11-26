@@ -9,8 +9,11 @@ def print_box(matrix: np.ndarray) -> None:
                 print(COLORS.green.value, "██",
                       COLORS.reset.value, sep ="", end="")
             elif matrix[yindex, xindex] == "EE":
-                            print(COLORS.red.value, "██",
-                                  COLORS.reset.value, sep ="", end="")
+                print(COLORS.red.value, "██",
+                      COLORS.reset.value, sep="", end="")
+            elif matrix[yindex, xindex] == "42":
+                print(COLORS.magenta.value, "██",
+                      COLORS.reset.value, sep="", end="")
             else:
                 print(matrix[yindex, xindex], end="")
         print("")
@@ -35,6 +38,8 @@ def open_passages(matrix: np.ndarray, hex_maze: HexMaze) -> None:
             if not cells & 4:
                 #print("S", end="-")
                 matrix[yindex * 2 + 2, xindex * 2 + 1] = "  "
+            if cells == 15:
+                matrix[yindex * 2 + 1, xindex * 2 + 1] = "42"
             #else:
                 #print("N/A", end="|")
         #print("")
