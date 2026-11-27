@@ -590,4 +590,4 @@ if __name__ == "__main__":
 
     print(f"\n{hex_printer}")
     print()
-    printer(hex_maze, initial_position, end_position)
+    printer(hex_maze, initial_position, end_position, final_path)
