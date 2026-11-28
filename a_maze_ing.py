@@ -60,4 +60,5 @@ if __name__ == "__main__":
 
     printer(hex_maze,
             mazegen.initial_position,
-            mazegen.end_position, perfect)
+            mazegen.end_position,
+            mazegen.final_path)

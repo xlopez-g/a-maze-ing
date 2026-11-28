@@ -62,8 +62,6 @@ def mark_solution(matrix: np.ndarray,
                   path: str) -> None:
 
     currentx, currenty = entry
-    passagex = currentx
-    passagey = currenty
     index = 0
     while index < len(path):
         #print(path[index])
