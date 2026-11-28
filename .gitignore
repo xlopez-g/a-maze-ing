@@ -1,2 +1,4 @@
 maze.txt
 maze_analyzer.py
+.venv
+.*

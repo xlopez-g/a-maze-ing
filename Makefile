@@ -5,20 +5,20 @@ PIP 		:= $(VENV)/bin/pip
 FLAKE8		:= $(VENV)/bin/flake8
 MYPY		:= $(VENV)/bin/mypy
 
-MAP			?=example.txt
+CONFIG			?=config.txt
 SRCS		:=$(wildcard *.py)
 
-.PHONY: install run debug clean lint lint_strict
+.PHONY: install run debug clean lint lint-strict
 
 install:
 		@test -d $(PYTHON) || $(PYTHON_SYS) -m venv $(VENV)
 		$(PIP) install -r requirements.txt
 
 run:
-		$(PYTHON) main.py $(MAP)
+		$(PYTHON) a_maze_ing.py $(CONFIG)
 
 debug:
-		$(PYTHON) -m pdb main.py
+		$(PYTHON) -m pdb a-maze-ing.py $(CONFIG)
 
 clean:
 		find . -type d -name "__pycache__" -exec rm -rf {} +
@@ -28,6 +28,6 @@ lint:
 		$(FLAKE8) --exclude=$(VENV) .
 		$(MYPY) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs --exclude=$(VENV) .
 
-lint_strict:
+lint-strict:
 		$(FLAKE8) --exclude=$(VENV) .
 		$(MYPY) --exclude=$(VENV) . --strict
