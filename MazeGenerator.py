@@ -40,7 +40,7 @@ class MazeGenerator:
 
         self.maze: CellMaze = CellMaze(width, height)
 
-        self.final_path: list[tuple[int, int]] | None = None
+        self.final_path: str
 
         self.generator()
 
@@ -350,7 +350,7 @@ class MazeGenerator:
 
             self.not_perfect_maze_solution()
 
-        final_path = self.finding_the_way()
+        self.final_path = self.finding_the_way()
 
         hex_maze = create_hex_maze(self.maze)
 
@@ -366,6 +366,6 @@ class MazeGenerator:
             archive.write("\n")
             archive.write(f"{initial_x},{initial_y}\n")
             archive.write(f"{self.end_position[1]},{self.end_position[0]}\n")
-            archive.write(f"{final_path}\n")
+            archive.write(f"{self.final_path}\n")
 
         return (self.maze)

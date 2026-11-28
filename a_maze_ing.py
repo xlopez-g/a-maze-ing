@@ -59,6 +59,6 @@ if __name__ == "__main__":
     hex_maze = create_hex_maze(mazegen.maze)
 
     printer(hex_maze,
-            mazegen.initial_position,
-            mazegen.end_position,
+            mazegen.entry,
+            mazegen.exit_pos,
             mazegen.final_path)
