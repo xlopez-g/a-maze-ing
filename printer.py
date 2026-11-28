@@ -1,7 +1,9 @@
 import numpy as np
 from models import HexMaze, PrintMaze, COLORS
 
-def print_box(matrix: np.ndarray) -> None:
+def print_box(matrix: np.ndarray,
+              show: bool,
+              wall_color: COLORS) -> None:
     height, width = matrix.shape
     for yindex in range(height):#imprime cuadrado a cuadrado incluyendo los bordes
         for xindex in range(width):
@@ -12,11 +14,20 @@ def print_box(matrix: np.ndarray) -> None:
                 print(COLORS.red.value, "██",
                       COLORS.reset.value, sep="", end="")
             elif matrix[yindex, xindex] == "42":
-                print(COLORS.magenta.value, "██",
+                print(COLORS.grey.value, "██",
+                      COLORS.reset.value, sep="", end="")
+            elif matrix[yindex, xindex] == "41":
+                print(COLORS.lime.value, "██",
                       COLORS.reset.value, sep="", end="")
             elif matrix[yindex, xindex] == "SS":
-                print(COLORS.cyan.value, "██",
-                      COLORS.reset.value, sep="", end="")
+                if show:
+                    print(COLORS.cyan.value, "██",
+                        COLORS.reset.value, sep="", end="")
+                else:
+                    print("  ", end="")
+            elif matrix[yindex, xindex] == "██":
+                print(wall_color.value, "██",
+                      COLORS.reset.value, sep ="", end="")
             else:
                 print(matrix[yindex, xindex], end="")
         print("")
@@ -41,12 +52,24 @@ def open_passages(matrix: np.ndarray, hex_maze: HexMaze) -> None:
             if not cells & 4:
                 #print("S", end="-")
                 matrix[yindex * 2 + 2, xindex * 2 + 1] = "  "
+
+
+def mark_42(matrix: np.ndarray, hex_maze: HexMaze) -> None:
+    width = hex_maze.width
+    height = hex_maze.height
+    for yindex in range(height):
+        for xindex in range(width):
+            cells = int(hex_maze[yindex, xindex], 16)
             if cells == 15:
                 matrix[yindex * 2 + 1, xindex * 2 + 1] = "42"
-            #else:
-                #print("N/A", end="|")
-        #print("")
-            
+                matrix[yindex * 2 , xindex * 2 + 1] = "41"#arriba
+                matrix[yindex * 2 + 2, xindex * 2 + 1] = "41"#abajo
+                matrix[yindex * 2 + 1, xindex * 2 ] = "41"#izq
+                matrix[yindex * 2 + 1, xindex * 2 + 2] = "41"#dcha
+                matrix[yindex * 2 , xindex * 2 + 2] = "41"#arriba dcha
+                matrix[yindex * 2 , xindex * 2] = "41" #arriba izq
+                matrix[yindex * 2 + 2, xindex * 2 ] = "41" #abajo dcha
+                matrix[yindex * 2 + 2, xindex * 2 + 2] = "41" #abajo izq
 
 def mark_positions(matrix: np.ndarray, entry: tuple[int, int], exit: tuple[int, int]) -> None:
     
@@ -85,8 +108,9 @@ def printer(hex_maze: HexMaze,
             entry_point: tuple[int, int],
             exit_point: tuple[int, int],
             solution_path: str):
-
+    show_solution: bool = True
     simple_square = "██"
+    wall_color = COLORS.orange
 
     #altura y anchura real para poder representar en la terminal junto al borde exterior
     width = hex_maze.width * 2 + 1
@@ -96,10 +120,11 @@ def printer(hex_maze: HexMaze,
 
     open_cells(matrix)
     open_passages(matrix, hex_maze)
+    mark_42(matrix, hex_maze)
     mark_solution(matrix, entry_point, solution_path)
     mark_positions(matrix, entry_point, exit_point)
     
-    print_box(matrix)
+    print_box(matrix, show_solution, wall_color)
     #print(solution_path)
 
     
